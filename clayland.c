@@ -62,6 +62,14 @@ input_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	return FALSE;
 }
 
+static void
+on_term_signal(int signal_number, void *data)
+{
+	Clayland *clayland = data;
+
+	clutter_main_quit();
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -69,6 +77,7 @@ main (int argc, char *argv[])
 	ClutterActor *stage;
 	ClutterColor  stage_color = { 0x61, 0x64, 0x8c, 0xff };
 	Clayland     *clayland;
+	struct wl_event_loop *loop;
 	gint          i;
 	GError       *error;
 	gchar        *file;
@@ -111,6 +120,10 @@ main (int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	loop = wl_display_get_event_loop(clayland->display);
+	wl_event_loop_add_signal(loop, SIGTERM, on_term_signal, clayland);
+	wl_event_loop_add_signal(loop, SIGINT, on_term_signal, clayland);
+
 	clayland->hand = clutter_texture_new_from_file ("redhand.png", &error);
 	if (clayland->hand == NULL)
 		g_error ("image load failed: %s", error->message);
@@ -141,8 +154,7 @@ main (int argc, char *argv[])
 
 	clutter_main ();
 
-	/* clean up */
-	g_free (clayland->hand);
+	wl_display_destroy (clayland->display);
 	g_free (clayland);
 
 	return EXIT_SUCCESS;
