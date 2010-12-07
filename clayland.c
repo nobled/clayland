@@ -106,8 +106,7 @@ main (int argc, char *argv[])
 	clayland->source = wl_glib_source_new(clayland->loop);
 	g_source_attach(clayland->source, NULL);
 
-	if (wl_display_add_socket(clayland->display,
-				  socket_name, sizeof socket_name)) {
+	if (wl_display_add_socket(clayland->display, NULL)) {
 		fprintf(stderr, "failed to add socket: %m\n");
 		exit(EXIT_FAILURE);
 	}
