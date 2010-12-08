@@ -7,7 +7,7 @@ AM_SILENT_RULES([yes])
 
 PKG_PROG_PKG_CONFIG()
 
-PKG_CHECK_MODULES(CLAYLAND, [wayland-server clutter-1.0 libdrm >= 2.4.17])
+PKG_CHECK_MODULES(CLAYLAND, [wayland-server clutter-1.0 libdrm >= 2.4.17 x11-xcb xcb-dri2])
 
 if test $CC = gcc; then
 	GCC_CFLAGS="-Wall -g -Wstrict-prototypes -Wmissing-prototypes -fvisibility=hidden"

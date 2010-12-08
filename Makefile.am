@@ -6,7 +6,9 @@ clayland_LDADD =				\
 	$(CLAYLAND_LIBS)
 
 clayland_SOURCES =				\
+	clayland.h				\
 	clayland.c				\
-	wayland-source.c
+	wayland-source.c			\
+	dri2.c
 
 ACLOCAL_AMFLAGS = -I m4

@@ -2,6 +2,7 @@
 #include <wayland-server.h>
 #include <clutter/clutter.h>
 
+#include <sys/time.h>
 #include <math.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -31,8 +32,6 @@ typedef struct ClaylandSurface {
 static gboolean
 event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 {
-	ClaylandCompositor *compositor = data;
-
 	switch (event->type) {
 	case CLUTTER_NOTHING:
 	case CLUTTER_KEY_PRESS:
@@ -220,14 +219,10 @@ clayland_compositor_create(ClutterActor *stage)
 int
 main (int argc, char *argv[])
 {
-	ClutterAlpha *alpha;
 	ClutterActor *stage;
 	ClutterColor  stage_color = { 0x61, 0x64, 0x8c, 0xff };
 	ClaylandCompositor *compositor;
-	struct wl_event_loop *loop;
-	gint          i;
 	GError       *error;
-	gchar        *file;
 
 	error = NULL;
 
@@ -239,6 +234,10 @@ main (int argc, char *argv[])
 
 		return EXIT_FAILURE;
 	}
+
+	/* Can we figure out whether we're compiling against clutter
+	 * x11 or not? */
+	dri2_connect();
 
 	stage = clutter_stage_get_default ();
 	clutter_actor_set_size (stage, 800, 600);
@@ -253,8 +252,6 @@ main (int argc, char *argv[])
 	compositor->hand = clutter_texture_new_from_file ("redhand.png", &error);
 	if (compositor->hand == NULL)
 		g_error ("image load failed: %s", error->message);
-
-	g_free (file);
 
 	compositor->stage_width = clutter_actor_get_width (stage);
 	compositor->stage_height = clutter_actor_get_height (stage);
