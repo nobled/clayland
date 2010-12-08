@@ -33,7 +33,39 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 {
 	ClaylandCompositor *compositor = data;
 
-	g_print ("*** stage event ***\n");
+	switch (event->type) {
+	case CLUTTER_NOTHING:
+	case CLUTTER_KEY_PRESS:
+	case CLUTTER_KEY_RELEASE:
+	case CLUTTER_STAGE_STATE:
+	case CLUTTER_DESTROY_NOTIFY:
+	case CLUTTER_CLIENT_MESSAGE:
+	case CLUTTER_DELETE:
+	case CLUTTER_SCROLL:
+		break;
+
+	case CLUTTER_MOTION:
+		fprintf(stderr, "motion %p, %f,%f\n",
+			event->motion.source,
+			event->motion.x, event->motion.y);
+		break;
+
+	case CLUTTER_ENTER:
+		fprintf(stderr, "enter %p\n", event->any.source);
+		break;
+
+	case CLUTTER_LEAVE:
+		fprintf(stderr, "leave %p\n", event->any.source);
+		break;
+
+	case CLUTTER_BUTTON_PRESS:
+		fprintf(stderr, "button press %p\n", event->any.source);
+		break;
+
+	case CLUTTER_BUTTON_RELEASE:
+		fprintf(stderr, "button release %p\n", event->any.source);
+		break;
+	}
 
 	return TRUE;
 }
