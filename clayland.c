@@ -64,10 +64,30 @@ clayland_surface_init (ClaylandSurface *compositor)
 {
 }
 
+typedef struct ClaylandInputDevice {
+	struct wl_input_device input_device;
+	ClutterInputDevice *clutter_device;
+} ClaylandInputDevice;
 
 static gboolean
 event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 {
+	const struct wl_grab_interface *interface;
+	struct wl_input_device *device;
+	ClutterInputDevice *clutter_device;
+	ClaylandInputDevice *clayland_device;
+	ClaylandSurface *cs;
+	int32_t sx, sy;
+
+	if (!CLAYLAND_IS_SURFACE (event->any.source))
+		return FALSE;
+
+	cs = CLAYLAND_SURFACE (event->any.source);
+	clutter_device = clutter_event_get_device (event);
+	clayland_device =
+		g_object_get_data (G_OBJECT(clutter_device), "clayland");
+	device = &clayland_device->input_device;
+
 	switch (event->type) {
 	case CLUTTER_NOTHING:
 	case CLUTTER_KEY_PRESS:
@@ -83,6 +103,35 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 		fprintf(stderr, "motion %p, %f,%f\n",
 			event->motion.source,
 			event->motion.x, event->motion.y);
+
+		device->x = event->motion.x;
+		device->y = event->motion.y;
+
+		if (device->grab) {
+			/* FIXME: Need to pass cs to motion callback always. */
+			interface = device->grab->interface;
+			interface->motion(device->grab,
+					  event->any.time,
+					  device->x, device->y);
+		} else {
+			/* FIXME: How do we get the surface coordinates? */
+			sx = 0;
+			sy = 0;
+			wl_input_device_set_pointer_focus(device,
+							  &cs->surface,
+							  event->any.time,
+							  device->x,
+							  device->y,
+							  sx, sy);
+			wl_client_post_event(cs->surface.client,
+					     &device->object,
+					     WL_INPUT_DEVICE_MOTION,
+					     event->any.time,
+					     device->x,
+					     device->y,
+					     sx, sy);
+		}
+
 		break;
 
 	case CLUTTER_ENTER:
