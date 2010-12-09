@@ -80,9 +80,6 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	gfloat sx, sy;
 
 	clutter_device = clutter_event_get_device (event);
-	clayland_device =
-		g_object_get_data (G_OBJECT(clutter_device), "clayland");
-	device = &clayland_device->input_device;
 
 	switch (event->type) {
 	case CLUTTER_NOTHING:
@@ -97,6 +94,10 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 		return FALSE;
 
 	case CLUTTER_MOTION:
+		clayland_device = g_object_get_data (G_OBJECT(clutter_device),
+						     "clayland");
+		device = &clayland_device->input_device;
+
 		fprintf(stderr, "device %p, motion %p, %f,%f\n",
 			clutter_device,
 			event->motion.source,
@@ -144,8 +145,8 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 		return TRUE;
 
 	case CLUTTER_ENTER:
-		fprintf(stderr, "device %p,enter %p\n",
-			clutter_device, event->any.source);
+		/* FIXME: Device is NULL on enter events? */
+		fprintf(stderr, "enter %p\n", event->any.source);
 		return FALSE;
 		break;
 
