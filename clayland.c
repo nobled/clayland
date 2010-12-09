@@ -77,12 +77,8 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	ClutterInputDevice *clutter_device;
 	ClaylandInputDevice *clayland_device;
 	ClaylandSurface *cs;
-	int32_t sx, sy;
+	gfloat sx, sy;
 
-	if (!CLAYLAND_IS_SURFACE (event->any.source))
-		return FALSE;
-
-	cs = CLAYLAND_SURFACE (event->any.source);
 	clutter_device = clutter_event_get_device (event);
 	clayland_device =
 		g_object_get_data (G_OBJECT(clutter_device), "clayland");
@@ -97,15 +93,21 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	case CLUTTER_CLIENT_MESSAGE:
 	case CLUTTER_DELETE:
 	case CLUTTER_SCROLL:
-		break;
+ 	default:
+		return FALSE;
 
 	case CLUTTER_MOTION:
-		fprintf(stderr, "motion %p, %f,%f\n",
+		fprintf(stderr, "device %p, motion %p, %f,%f\n",
+			clutter_device,
 			event->motion.source,
 			event->motion.x, event->motion.y);
 
 		device->x = event->motion.x;
 		device->y = event->motion.y;
+
+		cs = NULL;
+		if (CLAYLAND_IS_SURFACE (event->any.source))
+			cs = CLAYLAND_SURFACE (event->any.source);
 
 		if (device->grab) {
 			/* FIXME: Need to pass cs to motion callback always. */
@@ -113,45 +115,52 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 			interface->motion(device->grab,
 					  event->any.time,
 					  device->x, device->y);
-		} else {
-			/* FIXME: How do we get the surface coordinates? */
-			sx = 0;
-			sy = 0;
-			wl_input_device_set_pointer_focus(device,
-							  &cs->surface,
-							  event->any.time,
-							  device->x,
-							  device->y,
-							  sx, sy);
-			wl_client_post_event(cs->surface.client,
-					     &device->object,
-					     WL_INPUT_DEVICE_MOTION,
-					     event->any.time,
-					     device->x,
-					     device->y,
-					     sx, sy);
+			return TRUE;
 		}
 
-		break;
+		/* Not a clayland surface and we're not grabbing, so
+		 * let clutter deliver the event. */
+		if (cs == NULL)
+			return FALSE;
+
+		clutter_actor_transform_stage_point (event->any.source,
+						     device->x,
+						     device->y,
+						     &sx, &sy);
+
+		wl_input_device_set_pointer_focus(device,
+						  &cs->surface,
+						  event->any.time,
+						  device->x,
+						  device->y,
+						  sx, sy);
+		wl_client_post_event(cs->surface.client,
+				     &device->object,
+				     WL_INPUT_DEVICE_MOTION,
+				     event->any.time,
+				     device->x,
+				     device->y,
+				     sx, sy);
+		return TRUE;
 
 	case CLUTTER_ENTER:
-		fprintf(stderr, "enter %p\n", event->any.source);
+		fprintf(stderr, "device %p,enter %p\n",
+			clutter_device, event->any.source);
+		return FALSE;
 		break;
 
 	case CLUTTER_LEAVE:
 		fprintf(stderr, "leave %p\n", event->any.source);
-		break;
+		return FALSE;
 
 	case CLUTTER_BUTTON_PRESS:
 		fprintf(stderr, "button press %p\n", event->any.source);
-		break;
+		return FALSE;
 
 	case CLUTTER_BUTTON_RELEASE:
 		fprintf(stderr, "button release %p\n", event->any.source);
-		break;
+		return FALSE;
 	}
-
-	return TRUE;
 }
 
 static void
@@ -261,6 +270,64 @@ const static struct wl_compositor_interface compositor_interface = {
 	compositor_create_surface,
 };
 
+static void
+input_device_attach(struct wl_client *client,
+		    struct wl_input_device *device_base,
+		    uint32_t time,
+		    struct wl_buffer *buffer, int32_t x, int32_t y)
+{
+	ClaylandInputDevice *device =
+		container_of(device_base, ClaylandInputDevice, input_device);
+
+	if (time < device->input_device.pointer_focus_time)
+		return;
+	if (device->input_device.pointer_focus == NULL)
+		return;
+
+	if (device->input_device.pointer_focus->client != client)
+		return;
+
+	/* FIXME: Actually update pointer image */
+}
+
+const static struct wl_input_device_interface input_device_interface = {
+	input_device_attach,
+};
+
+static void
+add_devices(ClaylandCompositor *compositor)
+{
+	ClutterDeviceManager *device_manager;
+	ClaylandInputDevice *clayland_device;
+	ClutterInputDevice *device;
+	GSList *list, *l;
+
+	device_manager = clutter_device_manager_get_default ();
+	list = clutter_device_manager_list_devices (device_manager);
+
+	for (l = list; l; l = l->next) {
+		fprintf(stderr, "device %p\n", l->data);
+		device = CLUTTER_INPUT_DEVICE (l->data);
+		clayland_device = g_new (ClaylandInputDevice, 1);
+
+		wl_input_device_init(&clayland_device->input_device,
+				     &compositor->compositor);
+
+		clayland_device->input_device.object.interface =
+			&wl_input_device_interface;
+		clayland_device->input_device.object.implementation =
+			(void (**)(void)) &input_device_interface;
+		wl_display_add_object(compositor->display,
+				      &clayland_device->input_device.object);
+		wl_display_add_global(compositor->display,
+				      &clayland_device->input_device.object,
+				      NULL);
+
+		g_object_set_data (G_OBJECT (device), "clayland",
+				   clayland_device);
+	}
+}
+
 ClaylandCompositor *
 clayland_compositor_create(ClutterActor *stage)
 {
@@ -292,6 +359,8 @@ clayland_compositor_create(ClutterActor *stage)
 		g_free(compositor);
 		return NULL;
 	}
+
+	add_devices(compositor);
 
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGTERM, on_term_signal, compositor);
