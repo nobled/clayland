@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <wayland-server.h>
 #include <clutter/clutter.h>
+#include <clutter/egl/clutter-egl.h>
 
 #include <sys/time.h>
 #include <math.h>
@@ -19,6 +20,8 @@ typedef struct ClaylandCompositor {
 	struct wl_event_loop	*loop;
 
 	struct wl_compositor	 compositor;
+
+	EGLDisplay		 egl_display;
 
 	gint stage_width;
 	gint stage_height;
@@ -367,6 +370,9 @@ clayland_compositor_create(ClutterActor *stage)
 				 SIGTERM, on_term_signal, compositor);
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGINT, on_term_signal, compositor);
+
+	compositor->egl_display = clutter_eglx_display ();
+	fprintf(stderr, "egl display %p\n", compositor->egl_display);
 
 	return compositor;
 }
