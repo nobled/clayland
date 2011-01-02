@@ -245,7 +245,7 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 
 	g_object_unref (surface->hand);
 
-	g_free(surface);
+	g_object_unref(surface);
 }
 
 static void
@@ -257,7 +257,7 @@ compositor_create_surface(struct wl_client *client,
 	ClaylandSurface *surface;
 	GError       *error;
 
-	surface = g_new (ClaylandSurface, 1);
+	surface = g_object_new (clayland_surface_get_type(), NULL);
 
 	error = NULL;
 	surface->hand = clutter_texture_new_from_file ("redhand.png", &error);
@@ -344,13 +344,13 @@ clayland_compositor_create(ClutterActor *stage)
 {
 	ClaylandCompositor *compositor;
 
-	compositor = g_new (ClaylandCompositor, 1);
+	compositor = g_object_new (clayland_compositor_get_type(), NULL);
 	compositor->stage = stage;
 
 	compositor->display = wl_display_create();
 	if (compositor->display == NULL) {
 		fprintf(stderr, "failed to create display: %m\n");
-		g_free(compositor);
+		g_object_unref(compositor);
 		return NULL;
 	}
 
@@ -360,14 +360,14 @@ clayland_compositor_create(ClutterActor *stage)
 
 	if (wl_display_add_socket(compositor->display, NULL)) {
 		fprintf(stderr, "failed to add socket: %m\n");
-		g_free(compositor);
+		g_object_unref(compositor);
 		return NULL;
 	}
 
 	if (wl_compositor_init(&compositor->compositor,
 			       &compositor_interface,
 			       compositor->display) < 0) {
-		g_free(compositor);
+		g_object_unref(compositor);
 		return NULL;
 	}
 
@@ -442,7 +442,7 @@ main (int argc, char *argv[])
 	clutter_main ();
 
 	wl_display_destroy (compositor->display);
-	g_free (compositor);
+	g_object_unref (compositor);
 
 	return EXIT_SUCCESS;
 }
