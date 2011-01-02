@@ -1,7 +1,11 @@
 #ifndef CLAYLAND_H
 #define CLAYLAND_H
 
+#include <clutter/clutter.h>
+#include <EGL/egl.h>
 #include <glib.h>
+#include <glib-object.h>
+#include <wayland-server.h>
 
 #define CLAYLAND_TYPE_COMPOSITOR            (clayland_compositor_get_type ())
 #define CLAYLAND_COMPOSITOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositor))
@@ -21,5 +25,40 @@ GSource *wl_glib_source_new(struct wl_event_loop *loop);
 
 int dri2_connect(void);
 int dri2_authenticate(uint32_t magic);
+
+GType clayland_compositor_get_type(void);
+GType clayland_surface_get_type(void);
+
+typedef struct ClaylandCompositor {
+	GObject			 object;
+	ClutterActor		*hand;
+	ClutterActor		*stage;
+	GSource			*source;
+	struct wl_display	*display;
+	struct wl_event_loop	*loop;
+
+	struct wl_compositor	 compositor;
+
+	EGLDisplay		 egl_display;
+
+	gint stage_width;
+	gint stage_height;
+} ClaylandCompositor;
+
+typedef struct ClaylandCompositorClass {
+	GObjectClass		 object_class;
+} ClaylandCompositorClass;
+
+
+typedef struct ClaylandSurface {
+	ClutterActor		 actor;
+	struct wl_surface	 surface;
+	ClaylandCompositor	*compositor;
+	ClutterActor		*hand;
+} ClaylandSurface;
+
+typedef struct ClaylandSurfaceClass {
+	ClutterActorClass	 actor_class;
+} ClaylandSurfaceClass;
 
 #endif /* CLAYLAND_H */

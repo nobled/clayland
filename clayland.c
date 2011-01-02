@@ -11,26 +11,6 @@
 
 #include "clayland.h"
 
-typedef struct ClaylandCompositor {
-	GObject			 object;
-	ClutterActor		*hand;
-	ClutterActor		*stage;
-	GSource			*source;
-	struct wl_display	*display;
-	struct wl_event_loop	*loop;
-
-	struct wl_compositor	 compositor;
-
-	EGLDisplay		 egl_display;
-
-	gint stage_width;
-	gint stage_height;
-} ClaylandCompositor;
-
-typedef struct ClaylandCompositorClass {
-	GObjectClass		 object_class;
-} ClaylandCompositorClass;
-
 G_DEFINE_TYPE (ClaylandCompositor, clayland_compositor, G_TYPE_OBJECT);
 
 static void
@@ -44,17 +24,6 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 }
 
 
-typedef struct ClaylandSurface {
-	ClutterActor		 actor;
-	struct wl_surface	 surface;
-	ClaylandCompositor	*compositor;
-	ClutterActor		*hand;
-} ClaylandSurface;
-
-typedef struct ClaylandSurfaceClass {
-	ClutterActorClass	 actor_class;
-} ClaylandSurfaceClass;
-
 G_DEFINE_TYPE (ClaylandSurface, clayland_surface, CLUTTER_TYPE_ACTOR);
 
 static void
@@ -63,7 +32,7 @@ clayland_surface_class_init (ClaylandSurfaceClass *klass)
 }
 
 static void
-clayland_surface_init (ClaylandSurface *compositor)
+clayland_surface_init (ClaylandSurface *surface)
 {
 }
 
