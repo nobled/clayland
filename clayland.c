@@ -196,8 +196,8 @@ surface_map(struct wl_client *client,
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
 
-	clutter_actor_set_size (csurface->hand, x, y);
-	clutter_actor_set_position (csurface->hand, width, height);
+	clutter_actor_set_size (csurface->hand, width, height);
+	clutter_actor_set_position (csurface->hand, x, y);
 	clutter_actor_show (csurface->hand);
 }
 
