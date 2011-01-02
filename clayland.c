@@ -24,7 +24,7 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 }
 
 
-G_DEFINE_TYPE (ClaylandSurface, clayland_surface, CLUTTER_TYPE_ACTOR);
+G_DEFINE_TYPE (ClaylandSurface, clayland_surface, CLUTTER_TYPE_TEXTURE);
 
 static void
 clayland_surface_class_init (ClaylandSurfaceClass *klass)
@@ -33,6 +33,18 @@ clayland_surface_class_init (ClaylandSurfaceClass *klass)
 
 static void
 clayland_surface_init (ClaylandSurface *surface)
+{
+}
+
+G_DEFINE_TYPE (ClaylandBuffer, clayland_buffer, G_TYPE_OBJECT);
+
+static void
+clayland_buffer_class_init (ClaylandBufferClass *klass)
+{
+}
+
+static void
+clayland_buffer_init (ClaylandBuffer *buffer)
 {
 }
 
@@ -156,10 +168,14 @@ surface_attach(struct wl_client *client,
 {
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
-	/* TODO: No buffer implementation yet */
-	clutter_actor_set_position (csurface->hand, x, y);
-	clutter_actor_set_size (csurface->hand, buffer->width,
-	                        buffer->height);
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
+
+	clutter_texture_set_cogl_texture(&csurface->texture,
+	                                 cbuffer->tex_handle);
+	clutter_actor_set_position (CLUTTER_ACTOR(&csurface->texture), x, y);
+	clutter_actor_set_size (CLUTTER_ACTOR(&csurface->texture),
+	                        buffer->width, buffer->height);
 }
 
 static void
@@ -169,7 +185,7 @@ surface_map_toplevel(struct wl_client *client,
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
 
-	clutter_actor_show (csurface->hand);
+	clutter_actor_show (CLUTTER_ACTOR(&csurface->texture));
 }
 
 static void
