@@ -182,22 +182,24 @@ surface_destroy(struct wl_client *client,
 
 static void
 surface_attach(struct wl_client *client,
-	       struct wl_surface *surface, struct wl_buffer *buffer)
+	       struct wl_surface *surface, struct wl_buffer *buffer,
+	       int32_t x, int32_t y)
 {
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
+	/* TODO: No buffer implementation yet */
+	clutter_actor_set_position (csurface->hand, x, y);
+	clutter_actor_set_size (csurface->hand, buffer->width,
+	                        buffer->height);
 }
 
 static void
-surface_map(struct wl_client *client,
-	    struct wl_surface *surface,
-	    int32_t x, int32_t y, int32_t width, int32_t height)
+surface_map_toplevel(struct wl_client *client,
+	    struct wl_surface *surface)
 {
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
 
-	clutter_actor_set_size (csurface->hand, width, height);
-	clutter_actor_set_position (csurface->hand, x, y);
 	clutter_actor_show (csurface->hand);
 }
 
@@ -213,7 +215,7 @@ surface_damage(struct wl_client *client,
 const static struct wl_surface_interface surface_interface = {
 	surface_destroy,
 	surface_attach,
-	surface_map,
+	surface_map_toplevel,
 	surface_damage
 };
 
