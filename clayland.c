@@ -184,7 +184,8 @@ static void
 surface_attach(struct wl_client *client,
 	       struct wl_surface *surface, struct wl_buffer *buffer)
 {
-	ClaylandSurface *csurface = (ClaylandSurface *) surface;
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
 }
 
 static void
@@ -192,7 +193,8 @@ surface_map(struct wl_client *client,
 	    struct wl_surface *surface,
 	    int32_t x, int32_t y, int32_t width, int32_t height)
 {
-	ClaylandSurface *csurface = (ClaylandSurface *) surface;
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
 
 	clutter_actor_set_size (csurface->hand, x, y);
 	clutter_actor_set_position (csurface->hand, width, height);
@@ -204,7 +206,8 @@ surface_damage(struct wl_client *client,
 	       struct wl_surface *surface,
 	       int32_t x, int32_t y, int32_t width, int32_t height)
 {
-	ClaylandSurface *csurface = (ClaylandSurface *) surface;
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
 }
 
 const static struct wl_surface_interface surface_interface = {
@@ -227,7 +230,8 @@ get_time(void)
 static void
 destroy_surface(struct wl_resource *resource, struct wl_client *client)
 {
-	ClaylandSurface *surface = (ClaylandSurface *) resource;
+	ClaylandSurface *surface =
+		container_of(resource, ClaylandSurface, surface.resource);
 	ClaylandCompositor *compositor = surface->compositor;
 	struct wl_listener *l, *next;
 	uint32_t time;
@@ -246,7 +250,8 @@ static void
 compositor_create_surface(struct wl_client *client,
 			  struct wl_compositor *compositor, uint32_t id)
 {
-	ClaylandCompositor *clayland = (ClaylandCompositor *) compositor;
+	ClaylandCompositor *clayland =
+		container_of(compositor, ClaylandCompositor, compositor);
 	ClaylandSurface *surface;
 	GError       *error;
 
