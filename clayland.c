@@ -332,6 +332,8 @@ compositor_create_surface(struct wl_client *client,
 		return;
 	}
 
+	clutter_container_add_actor(compositor->stage, &surface->texture);
+
 	surface->surface.resource.destroy = destroy_surface;
 
 	surface->surface.resource.object.id = id;
