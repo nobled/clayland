@@ -11,26 +11,6 @@
 
 #include "clayland.h"
 
-typedef struct ClaylandCompositor {
-	GObject			 object;
-	ClutterActor		*hand;
-	ClutterActor		*stage;
-	GSource			*source;
-	struct wl_display	*display;
-	struct wl_event_loop	*loop;
-
-	struct wl_compositor	 compositor;
-
-	EGLDisplay		 egl_display;
-
-	gint stage_width;
-	gint stage_height;
-} ClaylandCompositor;
-
-typedef struct ClaylandCompositorClass {
-	GObjectClass		 object_class;
-} ClaylandCompositorClass;
-
 G_DEFINE_TYPE (ClaylandCompositor, clayland_compositor, G_TYPE_OBJECT);
 
 static void
@@ -44,18 +24,7 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 }
 
 
-typedef struct ClaylandSurface {
-	ClutterActor		 actor;
-	struct wl_surface	 surface;
-	ClaylandCompositor	*compositor;
-	ClutterActor		*hand;
-} ClaylandSurface;
-
-typedef struct ClaylandSurfaceClass {
-	ClutterActorClass	 actor_class;
-} ClaylandSurfaceClass;
-
-G_DEFINE_TYPE (ClaylandSurface, clayland_surface, CLUTTER_TYPE_ACTOR);
+G_DEFINE_TYPE (ClaylandSurface, clayland_surface, CLUTTER_TYPE_TEXTURE);
 
 static void
 clayland_surface_class_init (ClaylandSurfaceClass *klass)
@@ -63,7 +32,19 @@ clayland_surface_class_init (ClaylandSurfaceClass *klass)
 }
 
 static void
-clayland_surface_init (ClaylandSurface *compositor)
+clayland_surface_init (ClaylandSurface *surface)
+{
+}
+
+G_DEFINE_TYPE (ClaylandBuffer, clayland_buffer, G_TYPE_OBJECT);
+
+static void
+clayland_buffer_class_init (ClaylandBufferClass *klass)
+{
+}
+
+static void
+clayland_buffer_init (ClaylandBuffer *buffer)
 {
 }
 
@@ -174,6 +155,82 @@ on_term_signal(int signal_number, void *data)
 }
 
 static void
+default_buffer_attach(struct wl_buffer *buffer, struct wl_surface *surface)
+{
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
+	/* do nothing; surface_attach (below) has this covered. */
+}
+
+static void
+default_buffer_damage(struct wl_buffer *buffer,
+                      struct wl_surface *surface,
+                      int32_t x, int32_t y, int32_t width, int32_t height)
+{
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
+
+	/* damage event: TODO */
+}
+
+static void
+default_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
+{
+	ClaylandBuffer *cbuffer =
+		container_of(resource, ClaylandBuffer, buffer.resource);
+
+	g_object_unref(cbuffer);
+}
+
+static void
+client_destroy_buffer(struct wl_client *client, struct wl_buffer *buffer)
+{
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
+
+	/* XXX: Is this redundant with the resource destroy callback? */
+}
+
+static const struct wl_buffer_interface default_buffer_interface = {
+	client_destroy_buffer
+};
+
+CoglPixelFormat
+_clayland_init_buffer(ClaylandBuffer *cbuffer,
+                      ClaylandCompositor *compositor,
+                      uint32_t id, int32_t width, int32_t height,
+                      struct wl_visual *visual)
+{
+	cbuffer->buffer.compositor = &compositor->compositor;
+	cbuffer->buffer.width = width;
+	cbuffer->buffer.height = height;
+	cbuffer->buffer.visual = visual;
+	cbuffer->buffer.attach = default_buffer_attach;
+	cbuffer->buffer.damage = default_buffer_damage;
+
+	cbuffer->buffer.resource.object.id = id;
+	cbuffer->buffer.resource.object.interface = &wl_buffer_interface;
+	cbuffer->buffer.resource.object.implementation = (void (**)(void))
+		&default_buffer_interface;
+
+	cbuffer->buffer.resource.destroy = default_buffer_destroy;
+
+	if (visual == &compositor->compositor.premultiplied_argb_visual)
+		return COGL_PIXEL_FORMAT_ARGB_8888_PRE;
+	if (visual == &compositor->compositor.argb_visual)
+		return COGL_PIXEL_FORMAT_ARGB_8888;
+	if (visual == &compositor->compositor.rgb_visual)
+		return COGL_PIXEL_FORMAT_RGB_888;
+
+	/* unknown visual. */
+	return COGL_PIXEL_FORMAT_ANY;
+}
+
+static void
 surface_destroy(struct wl_client *client,
 		struct wl_surface *surface)
 {
@@ -182,21 +239,30 @@ surface_destroy(struct wl_client *client,
 
 static void
 surface_attach(struct wl_client *client,
-	       struct wl_surface *surface, struct wl_buffer *buffer)
+	       struct wl_surface *surface, struct wl_buffer *buffer,
+	       int32_t x, int32_t y)
 {
-	ClaylandSurface *csurface = (ClaylandSurface *) surface;
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
+
+	buffer->attach(buffer, surface); /* XXX: does nothing right now */
+	clutter_texture_set_cogl_texture(&csurface->texture,
+	                                 cbuffer->tex_handle);
+	clutter_actor_set_position (CLUTTER_ACTOR(&csurface->texture), x, y);
+	clutter_actor_set_size (CLUTTER_ACTOR(&csurface->texture),
+	                        buffer->width, buffer->height);
 }
 
 static void
-surface_map(struct wl_client *client,
-	    struct wl_surface *surface,
-	    int32_t x, int32_t y, int32_t width, int32_t height)
+surface_map_toplevel(struct wl_client *client,
+	    struct wl_surface *surface)
 {
-	ClaylandSurface *csurface = (ClaylandSurface *) surface;
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
 
-	clutter_actor_set_size (csurface->hand, x, y);
-	clutter_actor_set_position (csurface->hand, width, height);
-	clutter_actor_show (csurface->hand);
+	clutter_actor_show (CLUTTER_ACTOR(&csurface->texture));
 }
 
 static void
@@ -204,13 +270,18 @@ surface_damage(struct wl_client *client,
 	       struct wl_surface *surface,
 	       int32_t x, int32_t y, int32_t width, int32_t height)
 {
-	ClaylandSurface *csurface = (ClaylandSurface *) surface;
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
+
+	/* XXX: surface needs a pointer to its bound buffer
+	   in order to call buffer->damage(). */
+	/* damage event: TODO */
 }
 
 const static struct wl_surface_interface surface_interface = {
 	surface_destroy,
 	surface_attach,
-	surface_map,
+	surface_map_toplevel,
 	surface_damage
 };
 
@@ -227,7 +298,8 @@ get_time(void)
 static void
 destroy_surface(struct wl_resource *resource, struct wl_client *client)
 {
-	ClaylandSurface *surface = (ClaylandSurface *) resource;
+	ClaylandSurface *surface =
+		container_of(resource, ClaylandSurface, surface.resource);
 	ClaylandCompositor *compositor = surface->compositor;
 	struct wl_listener *l, *next;
 	uint32_t time;
@@ -239,18 +311,19 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 
 	g_object_unref (surface->hand);
 
-	g_free(surface);
+	g_object_unref(surface);
 }
 
 static void
 compositor_create_surface(struct wl_client *client,
 			  struct wl_compositor *compositor, uint32_t id)
 {
-	ClaylandCompositor *clayland = (ClaylandCompositor *) compositor;
+	ClaylandCompositor *clayland =
+		container_of(compositor, ClaylandCompositor, compositor);
 	ClaylandSurface *surface;
 	GError       *error;
 
-	surface = g_new (ClaylandSurface, 1);
+	surface = g_object_new (clayland_surface_get_type(), NULL);
 
 	error = NULL;
 	surface->hand = clutter_texture_new_from_file ("redhand.png", &error);
@@ -332,18 +405,27 @@ add_devices(ClaylandCompositor *compositor)
 	}
 }
 
+static void add_buffer_interfaces(ClaylandCompositor *compositor)
+{
+	compositor->shm_object.interface = &wl_shm_interface;
+	compositor->shm_object.implementation =
+	    (void (**)(void)) &clayland_shm_interface;
+	wl_display_add_object(compositor->display, &compositor->shm_object);
+	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
+}
+
 ClaylandCompositor *
 clayland_compositor_create(ClutterActor *stage)
 {
 	ClaylandCompositor *compositor;
 
-	compositor = g_new (ClaylandCompositor, 1);
+	compositor = g_object_new (clayland_compositor_get_type(), NULL);
 	compositor->stage = stage;
 
 	compositor->display = wl_display_create();
 	if (compositor->display == NULL) {
 		fprintf(stderr, "failed to create display: %m\n");
-		g_free(compositor);
+		g_object_unref(compositor);
 		return NULL;
 	}
 
@@ -353,18 +435,21 @@ clayland_compositor_create(ClutterActor *stage)
 
 	if (wl_display_add_socket(compositor->display, NULL)) {
 		fprintf(stderr, "failed to add socket: %m\n");
-		g_free(compositor);
+		wl_display_destroy (compositor->display);
+		g_object_unref(compositor);
 		return NULL;
 	}
 
 	if (wl_compositor_init(&compositor->compositor,
 			       &compositor_interface,
 			       compositor->display) < 0) {
-		g_free(compositor);
+		wl_display_destroy (compositor->display);
+		g_object_unref(compositor);
 		return NULL;
 	}
 
 	add_devices(compositor);
+	add_buffer_interfaces(compositor);
 
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGTERM, on_term_signal, compositor);
@@ -409,6 +494,8 @@ main (int argc, char *argv[])
 	clutter_stage_set_user_resizable (CLUTTER_STAGE (stage), TRUE);
 
 	compositor = clayland_compositor_create(stage);
+	if (!compositor)
+		return EXIT_FAILURE;
 
 	compositor->hand = clutter_texture_new_from_file ("redhand.png", &error);
 	if (compositor->hand == NULL)
@@ -435,7 +522,7 @@ main (int argc, char *argv[])
 	clutter_main ();
 
 	wl_display_destroy (compositor->display);
-	g_free (compositor);
+	g_object_unref (compositor);
 
 	return EXIT_SUCCESS;
 }
