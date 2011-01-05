@@ -79,7 +79,6 @@ struct _ClaylandSurface {
 	ClutterTexture		 texture;
 	struct wl_surface	 surface;
 	ClaylandCompositor	*compositor;
-	ClutterActor		*hand;
 };
 
 struct _ClaylandSurfaceClass {

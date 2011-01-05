@@ -310,8 +310,6 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 			      &surface->surface.destroy_listener_list, link)
 		l->func(l, &surface->surface, time);
 
-	g_object_unref (surface->hand);
-
 	g_object_unref(surface);
 }
 
@@ -322,16 +320,8 @@ compositor_create_surface(struct wl_client *client,
 	ClaylandCompositor *clayland =
 		container_of(compositor, ClaylandCompositor, compositor);
 	ClaylandSurface *surface;
-	GError       *error;
 
 	surface = g_object_new (clayland_surface_get_type(), NULL);
-
-	error = NULL;
-	surface->hand = clutter_texture_new_from_file ("redhand.png", &error);
-	if (surface->hand == NULL) {
-		g_error ("image load failed: %s", error->message);
-		return;
-	}
 
 	clutter_container_add_actor(CLUTTER_CONTAINER (clayland->stage),
 				    CLUTTER_ACTOR (&surface->texture));
