@@ -345,6 +345,7 @@ clayland_compositor_create(ClutterActor *stage)
 
 	if (wl_display_add_socket(compositor->display, NULL)) {
 		fprintf(stderr, "failed to add socket: %m\n");
+		wl_display_destroy (compositor->display);
 		g_object_unref(compositor);
 		return NULL;
 	}
@@ -352,6 +353,7 @@ clayland_compositor_create(ClutterActor *stage)
 	if (wl_compositor_init(&compositor->compositor,
 			       &compositor_interface,
 			       compositor->display) < 0) {
+		wl_display_destroy (compositor->display);
 		g_object_unref(compositor);
 		return NULL;
 	}
