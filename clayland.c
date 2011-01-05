@@ -220,11 +220,11 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 	cbuffer->buffer.resource.destroy = default_buffer_destroy;
 
 	if (visual == &compositor->compositor.premultiplied_argb_visual)
-		return COGL_PIXEL_FORMAT_ARGB_8888_PRE;
+		return COGL_PIXEL_FORMAT_BGRA_8888_PRE;
 	if (visual == &compositor->compositor.argb_visual)
-		return COGL_PIXEL_FORMAT_ARGB_8888;
+		return COGL_PIXEL_FORMAT_BGRA_8888;
 	if (visual == &compositor->compositor.rgb_visual)
-		return COGL_PIXEL_FORMAT_RGB_888;
+		return COGL_PIXEL_FORMAT_BGRA_8888;
 
 	/* unknown visual. */
 	return COGL_PIXEL_FORMAT_ANY;
