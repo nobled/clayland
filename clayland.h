@@ -47,7 +47,7 @@ CoglPixelFormat
 _clayland_init_buffer(ClaylandBuffer *cbuffer,
                       ClaylandCompositor *compositor,
                       uint32_t id, int32_t width, int32_t height,
-                      struct wl_visual *visual)
+                      struct wl_visual *visual);
 
 GType clayland_compositor_get_type(void);
 GType clayland_surface_get_type(void);
@@ -62,7 +62,7 @@ struct _ClaylandCompositor {
 	struct wl_event_loop	*loop;
 
 	struct wl_compositor	 compositor;
-	struct object		 shm_object;
+	struct wl_object	 shm_object;
 
 	EGLDisplay		 egl_display;
 

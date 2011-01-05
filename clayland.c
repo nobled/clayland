@@ -180,17 +180,17 @@ default_buffer_damage(struct wl_buffer *buffer,
 static void
 default_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
 {
-	ClaylandBuffer *buffer =
+	ClaylandBuffer *cbuffer =
 		container_of(resource, ClaylandBuffer, buffer.resource);
 
-	g_object_unref(buffer);
+	g_object_unref(cbuffer);
 }
 
 static void
 client_destroy_buffer(struct wl_client *client, struct wl_buffer *buffer)
 {
-	ClaylandBuffer *buffer =
-		container_of(resource, ClaylandBuffer, buffer.resource);
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
 
 	/* XXX: Is this redundant with the resource destroy callback? */
 }

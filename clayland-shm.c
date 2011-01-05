@@ -16,7 +16,7 @@ typedef struct _ClaylandShmBufferClass ClaylandShmBufferClass;
 
 struct _ClaylandShmBuffer {
 	ClaylandBuffer		 cbuffer;
-	guint8_t		*data;
+	guint8			*data;
 	size_t			 size;
 };
 
@@ -48,10 +48,10 @@ shm_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
 }
 
 static void
-client_shm_destroy_buffer(struct wl_client *client, struct wl_buffer *buffer)
+client_shm_destroy_buffer(struct wl_client *client, struct wl_buffer *wbuffer)
 {
-	ClaylandBuffer *buffer =
-		container_of(resource, ClaylandBuffer, buffer.resource);
+	ClaylandShmBuffer *buffer =
+		container_of(wbuffer, ClaylandShmBuffer, cbuffer.buffer);
 
 	/* XXX: Is this redundant with the resource destroy callback? */
 }
@@ -103,7 +103,7 @@ shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 
 	buffer->cbuffer.tex_handle =
 	cogl_texture_new_from_data((unsigned int)width, (unsigned int)height,
-	                flags, pformat, COGL_PIXEL_FORMAT_ANY, buffer->data);
+	                flags, pformat, COGL_PIXEL_FORMAT_ANY, stride, buffer->data);
 
 	if (buffer->cbuffer.tex_handle == COGL_INVALID_HANDLE) {
 		/* XXX: move munmap into GObject destructor? */
