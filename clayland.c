@@ -53,6 +53,48 @@ typedef struct ClaylandInputDevice {
 	ClutterInputDevice *clutter_device;
 } ClaylandInputDevice;
 
+
+static void
+motion_grab_motion(struct wl_grab *grab,
+		   uint32_t time, int32_t x, int32_t y)
+{
+	ClaylandInputDevice *clayland_device =
+		container_of(grab->input_device,
+			     ClaylandInputDevice, input_device);
+	ClaylandSurface *cs =
+		container_of(grab->input_device->pointer_focus,
+			     ClaylandSurface, surface);
+	gfloat sx, sy;
+
+	clutter_actor_transform_stage_point (CLUTTER_ACTOR (cs),
+					     x, y, &sx, &sy);
+	wl_client_post_event(cs->surface.client,
+			     &clayland_device->input_device.object,
+			     WL_INPUT_DEVICE_MOTION,
+			     time, x, y, sx, sy);
+}
+
+static void
+motion_grab_button(struct wl_grab *grab,
+		   uint32_t time, int32_t button, int32_t state)
+{
+	wl_client_post_event(grab->input_device->pointer_focus->client,
+			     &grab->input_device->object,
+			     WL_INPUT_DEVICE_BUTTON,
+			     time, button, state);
+}
+
+static void
+motion_grab_end(struct wl_grab *grab, uint32_t time)
+{
+}
+
+static const struct wl_grab_interface motion_grab_interface = {
+	motion_grab_motion,
+	motion_grab_button,
+	motion_grab_end
+};
+
 static gboolean
 event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 {
@@ -62,8 +104,17 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	ClaylandInputDevice *clayland_device;
 	ClaylandSurface *cs;
 	gfloat sx, sy;
+	uint32_t state, button;
 
 	clutter_device = clutter_event_get_device (event);
+	clayland_device =
+		g_object_get_data (G_OBJECT(clutter_device), "clayland");
+	device = &clayland_device->input_device;
+
+	if (CLAYLAND_IS_SURFACE (event->any.source))
+		cs = CLAYLAND_SURFACE (event->any.source);
+	else
+		cs = NULL;
 
 	switch (event->type) {
 	case CLUTTER_NOTHING:
@@ -78,21 +129,8 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 		return FALSE;
 
 	case CLUTTER_MOTION:
-		clayland_device = g_object_get_data (G_OBJECT(clutter_device),
-						     "clayland");
-		device = &clayland_device->input_device;
-
-		fprintf(stderr, "device %p, motion %p, %f,%f\n",
-			clutter_device,
-			event->motion.source,
-			event->motion.x, event->motion.y);
-
 		device->x = event->motion.x;
 		device->y = event->motion.y;
-
-		cs = NULL;
-		if (CLAYLAND_IS_SURFACE (event->any.source))
-			cs = CLAYLAND_SURFACE (event->any.source);
 
 		if (device->grab) {
 			/* FIXME: Need to pass cs to motion callback always. */
@@ -112,6 +150,10 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 						     device->x,
 						     device->y,
 						     &sx, &sy);
+
+		fprintf(stderr, "sending pointer_focus and motion to "
+			"surface %p, client %p\n",
+			cs, cs->surface.client);
 
 		wl_input_device_set_pointer_focus(device,
 						  &cs->surface,
@@ -139,12 +181,34 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 		return FALSE;
 
 	case CLUTTER_BUTTON_PRESS:
-		fprintf(stderr, "button press %p\n", event->any.source);
-		return FALSE;
-
 	case CLUTTER_BUTTON_RELEASE:
-		fprintf(stderr, "button release %p\n", event->any.source);
-		return FALSE;
+		/* Not a clayland surface, let clutter deliver the event. */
+		if (cs == NULL)
+			return FALSE;
+
+		state = event->type == CLUTTER_BUTTON_PRESS ? 1 : 0;
+		button = event->button.button + 271;
+
+		if (state && device->grab == NULL) {
+			clutter_actor_raise_top (CLUTTER_ACTOR (cs));
+
+			wl_input_device_start_grab(device,
+						   &device->motion_grab,
+						   button, event->any.time);
+			wl_input_device_set_keyboard_focus(device,
+							   &cs->surface,
+							   event->any.time);
+		}
+
+		device->grab->interface->button(device->grab,
+						event->any.time,
+						event->button.button + 271,
+						state);
+
+		if (!state && device->grab && device->grab_button == button)
+			wl_input_device_end_grab(device, event->any.time);
+
+		return TRUE;
 	}
 }
 
@@ -263,6 +327,7 @@ surface_map_toplevel(struct wl_client *client,
 		container_of(surface, ClaylandSurface, surface);
 
 	clutter_actor_show (CLUTTER_ACTOR(&csurface->texture));
+	clutter_actor_set_reactive (CLUTTER_ACTOR (&csurface->texture), TRUE);
 }
 
 static void
@@ -335,6 +400,7 @@ compositor_create_surface(struct wl_client *client,
 	clutter_container_add_actor(CLUTTER_CONTAINER (clayland->stage),
 				    CLUTTER_ACTOR (&surface->texture));
 
+	wl_list_init(&surface->surface.destroy_listener_list);
 	surface->surface.resource.destroy = destroy_surface;
 
 	surface->surface.resource.object.id = id;
@@ -402,6 +468,9 @@ add_devices(ClaylandCompositor *compositor)
 		wl_display_add_global(compositor->display,
 				      &clayland_device->input_device.object,
 				      NULL);
+
+		clayland_device->input_device.motion_grab.interface =
+			&motion_grab_interface;
 
 		g_object_set_data (G_OBJECT (device), "clayland",
 				   clayland_device);
