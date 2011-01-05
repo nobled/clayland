@@ -42,6 +42,7 @@ shm_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
 	ClaylandShmBuffer *buffer =
 		container_of(resource, ClaylandShmBuffer, cbuffer.buffer.resource);
 
+	cogl_handle_unref(cbuffer->handle);
 	munmap(buffer->data, buffer->size);
 	buffer->data = NULL;
 	g_object_unref(buffer);

@@ -183,6 +183,7 @@ default_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
 	ClaylandBuffer *cbuffer =
 		container_of(resource, ClaylandBuffer, buffer.resource);
 
+	cogl_handle_unref(cbuffer->handle);
 	g_object_unref(cbuffer);
 }
 
