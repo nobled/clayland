@@ -29,6 +29,13 @@
 #define CLAYLAND_IS_BUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), CLAYLAND_TYPE_BUFFER))
 #define CLAYLAND_BUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), CLAYLAND_TYPE_BUFFER, ClaylandBufferClass))
 
+typedef struct _ClaylandCompositor ClaylandCompositor;
+typedef struct _ClaylandCompositorClass ClaylandCompositorClass;
+typedef struct _ClaylandSurface ClaylandSurface;
+typedef struct _ClaylandSurfaceClass ClaylandSurfaceClass;
+typedef struct _ClaylandBuffer ClaylandBuffer;
+typedef struct _ClaylandBufferClass ClaylandBufferClass;
+
 GSource *wl_glib_source_new(struct wl_event_loop *loop);
 
 int dri2_connect(void);
@@ -38,7 +45,7 @@ GType clayland_compositor_get_type(void);
 GType clayland_surface_get_type(void);
 GType clayland_buffer_get_type(void);
 
-typedef struct ClaylandCompositor {
+struct _ClaylandCompositor {
 	GObject			 object;
 	ClutterActor		*hand;
 	ClutterActor		*stage;
@@ -52,33 +59,33 @@ typedef struct ClaylandCompositor {
 
 	gint stage_width;
 	gint stage_height;
-} ClaylandCompositor;
+};
 
-typedef struct ClaylandCompositorClass {
+struct _ClaylandCompositorClass {
 	GObjectClass		 object_class;
-} ClaylandCompositorClass;
+};
 
 
-typedef struct ClaylandSurface {
+struct _ClaylandSurface {
 	ClutterTexture		 texture;
 	struct wl_surface	 surface;
 	ClaylandCompositor	*compositor;
 	ClutterActor		*hand;
-} ClaylandSurface;
+};
 
-typedef struct ClaylandSurfaceClass {
+struct _ClaylandSurfaceClass {
 	ClutterTextureClass	 texture_class;
-} ClaylandSurfaceClass;
+};
 
 
-typedef struct ClaylandBuffer {
+struct _ClaylandBuffer {
 	GObject			 object;
 	CoglHandle		 tex_handle;
 	struct wl_buffer	 buffer;
-} ClaylandBuffer;
+};
 
-typedef struct ClaylandBufferClass {
+struct _ClaylandBufferClass {
 	GObjectClass		 object_class;
-} ClaylandBufferClass;
+};
 
 #endif /* CLAYLAND_H */
