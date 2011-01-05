@@ -41,6 +41,14 @@ GSource *wl_glib_source_new(struct wl_event_loop *loop);
 int dri2_connect(void);
 int dri2_authenticate(uint32_t magic);
 
+extern const struct wl_shm_interface clayland_shm_interface;
+
+CoglPixelFormat
+_clayland_init_buffer(ClaylandBuffer *cbuffer,
+                      ClaylandCompositor *compositor,
+                      uint32_t id, int32_t width, int32_t height,
+                      struct wl_visual *visual);
+
 GType clayland_compositor_get_type(void);
 GType clayland_surface_get_type(void);
 GType clayland_buffer_get_type(void);
@@ -54,6 +62,7 @@ struct _ClaylandCompositor {
 	struct wl_event_loop	*loop;
 
 	struct wl_compositor	 compositor;
+	struct wl_object	 shm_object;
 
 	EGLDisplay		 egl_display;
 

@@ -155,6 +155,82 @@ on_term_signal(int signal_number, void *data)
 }
 
 static void
+default_buffer_attach(struct wl_buffer *buffer, struct wl_surface *surface)
+{
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
+	/* do nothing; surface_attach (below) has this covered. */
+}
+
+static void
+default_buffer_damage(struct wl_buffer *buffer,
+                      struct wl_surface *surface,
+                      int32_t x, int32_t y, int32_t width, int32_t height)
+{
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
+
+	/* damage event: TODO */
+}
+
+static void
+default_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
+{
+	ClaylandBuffer *cbuffer =
+		container_of(resource, ClaylandBuffer, buffer.resource);
+
+	g_object_unref(cbuffer);
+}
+
+static void
+client_destroy_buffer(struct wl_client *client, struct wl_buffer *buffer)
+{
+	ClaylandBuffer *cbuffer =
+		container_of(buffer, ClaylandBuffer, buffer);
+
+	/* XXX: Is this redundant with the resource destroy callback? */
+}
+
+static const struct wl_buffer_interface default_buffer_interface = {
+	client_destroy_buffer
+};
+
+CoglPixelFormat
+_clayland_init_buffer(ClaylandBuffer *cbuffer,
+                      ClaylandCompositor *compositor,
+                      uint32_t id, int32_t width, int32_t height,
+                      struct wl_visual *visual)
+{
+	cbuffer->buffer.compositor = &compositor->compositor;
+	cbuffer->buffer.width = width;
+	cbuffer->buffer.height = height;
+	cbuffer->buffer.visual = visual;
+	cbuffer->buffer.attach = default_buffer_attach;
+	cbuffer->buffer.damage = default_buffer_damage;
+
+	cbuffer->buffer.resource.object.id = id;
+	cbuffer->buffer.resource.object.interface = &wl_buffer_interface;
+	cbuffer->buffer.resource.object.implementation = (void (**)(void))
+		&default_buffer_interface;
+
+	cbuffer->buffer.resource.destroy = default_buffer_destroy;
+
+	if (visual == &compositor->compositor.premultiplied_argb_visual)
+		return COGL_PIXEL_FORMAT_ARGB_8888_PRE;
+	if (visual == &compositor->compositor.argb_visual)
+		return COGL_PIXEL_FORMAT_ARGB_8888;
+	if (visual == &compositor->compositor.rgb_visual)
+		return COGL_PIXEL_FORMAT_RGB_888;
+
+	/* unknown visual. */
+	return COGL_PIXEL_FORMAT_ANY;
+}
+
+static void
 surface_destroy(struct wl_client *client,
 		struct wl_surface *surface)
 {
@@ -171,6 +247,7 @@ surface_attach(struct wl_client *client,
 	ClaylandBuffer *cbuffer =
 		container_of(buffer, ClaylandBuffer, buffer);
 
+	buffer->attach(buffer, surface); /* XXX: does nothing right now */
 	clutter_texture_set_cogl_texture(&csurface->texture,
 	                                 cbuffer->tex_handle);
 	clutter_actor_set_position (CLUTTER_ACTOR(&csurface->texture), x, y);
@@ -195,6 +272,10 @@ surface_damage(struct wl_client *client,
 {
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
+
+	/* XXX: surface needs a pointer to its bound buffer
+	   in order to call buffer->damage(). */
+	/* damage event: TODO */
 }
 
 const static struct wl_surface_interface surface_interface = {
@@ -324,6 +405,15 @@ add_devices(ClaylandCompositor *compositor)
 	}
 }
 
+static void add_buffer_interfaces(ClaylandCompositor *compositor)
+{
+	compositor->shm_object.interface = &wl_shm_interface;
+	compositor->shm_object.implementation =
+	    (void (**)(void)) &clayland_shm_interface;
+	wl_display_add_object(compositor->display, &compositor->shm_object);
+	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
+}
+
 ClaylandCompositor *
 clayland_compositor_create(ClutterActor *stage)
 {
@@ -359,6 +449,7 @@ clayland_compositor_create(ClutterActor *stage)
 	}
 
 	add_devices(compositor);
+	add_buffer_interfaces(compositor);
 
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGTERM, on_term_signal, compositor);
@@ -403,6 +494,8 @@ main (int argc, char *argv[])
 	clutter_stage_set_user_resizable (CLUTTER_STAGE (stage), TRUE);
 
 	compositor = clayland_compositor_create(stage);
+	if (!compositor)
+		return EXIT_FAILURE;
 
 	compositor->hand = clutter_texture_new_from_file ("redhand.png", &error);
 	if (compositor->hand == NULL)

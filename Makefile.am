@@ -8,6 +8,7 @@ clayland_LDADD =				\
 clayland_SOURCES =				\
 	clayland.h				\
 	clayland.c				\
+	clayland-shm.c				\
 	wayland-source.c			\
 	dri2.c
 
