@@ -49,19 +49,6 @@ shm_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
 }
 
 static void
-client_shm_destroy_buffer(struct wl_client *client, struct wl_buffer *wbuffer)
-{
-	ClaylandShmBuffer *buffer =
-		container_of(wbuffer, ClaylandShmBuffer, cbuffer.buffer);
-
-	/* XXX: Is this redundant with the resource destroy callback? */
-}
-
-static const struct wl_buffer_interface shm_buffer_interface = {
-	client_shm_destroy_buffer
-};
-
-static void
 shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 		  uint32_t id, int fd, int32_t width, int32_t height,
 		  uint32_t stride, struct wl_visual *visual)
@@ -88,10 +75,6 @@ shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 
 	/* override the default Clayland implementation */
 	buffer->cbuffer.buffer.resource.destroy = shm_buffer_destroy;
-/* XXX: May want to override this, too, once it does anything. */ 
-/*	buffer->cbuffer.buffer.resource.object.implementation =
-	    (void (**)(void)) &shm_buffer_interface;
-*/
 
 	buffer->size = stride * height;
 	buffer->data = mmap(NULL, buffer->size,

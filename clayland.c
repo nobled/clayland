@@ -245,22 +245,9 @@ default_buffer_damage(struct wl_buffer *buffer,
 }
 
 static void
-default_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
-{
-	ClaylandBuffer *cbuffer =
-		container_of(resource, ClaylandBuffer, buffer.resource);
-
-	cogl_handle_unref(cbuffer->tex_handle);
-	g_object_unref(cbuffer);
-}
-
-static void
 client_destroy_buffer(struct wl_client *client, struct wl_buffer *buffer)
 {
-	ClaylandBuffer *cbuffer =
-		container_of(buffer, ClaylandBuffer, buffer);
-
-	/* XXX: Is this redundant with the resource destroy callback? */
+	wl_resource_destroy(&buffer->resource, client);
 }
 
 static const struct wl_buffer_interface default_buffer_interface = {
@@ -284,8 +271,6 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 	cbuffer->buffer.resource.object.interface = &wl_buffer_interface;
 	cbuffer->buffer.resource.object.implementation = (void (**)(void))
 		&default_buffer_interface;
-
-	cbuffer->buffer.resource.destroy = default_buffer_destroy;
 
 	if (visual == &compositor->compositor.premultiplied_argb_visual)
 		return COGL_PIXEL_FORMAT_BGRA_8888_PRE;
