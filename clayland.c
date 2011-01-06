@@ -39,8 +39,20 @@ clayland_surface_init (ClaylandSurface *surface)
 G_DEFINE_TYPE (ClaylandBuffer, clayland_buffer, G_TYPE_OBJECT);
 
 static void
+clayland_buffer_finalize (GObject *object)
+{
+	ClaylandBuffer *cbuffer = CLAYLAND_BUFFER(object);
+
+	cogl_handle_unref(cbuffer->tex_handle);
+	G_OBJECT_CLASS (clayland_buffer_parent_class)->finalize (object);
+}
+
+static void
 clayland_buffer_class_init (ClaylandBufferClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->finalize = clayland_buffer_finalize;
 }
 
 static void

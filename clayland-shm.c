@@ -27,8 +27,23 @@ struct _ClaylandShmBufferClass {
 G_DEFINE_TYPE (ClaylandShmBuffer, clayland_shm_buffer, CLAYLAND_TYPE_BUFFER);
 
 static void
+clayland_shm_buffer_finalize (GObject *object)
+{
+	ClaylandShmBuffer *buffer = CLAYLAND_SHM_BUFFER(object);
+
+	G_OBJECT_CLASS (clayland_shm_buffer_parent_class)->finalize (object);
+	/* The CoglHandle is still holding onto the data, so don't unmap it
+	   until *after* the above call deletes the final reference to
+	   the CoglHandle. */
+	munmap(buffer->data, buffer->size);
+}
+
+static void
 clayland_shm_buffer_class_init (ClaylandShmBufferClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->finalize = clayland_shm_buffer_finalize;
 }
 
 static void
@@ -42,9 +57,7 @@ shm_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
 	ClaylandShmBuffer *buffer =
 		container_of(resource, ClaylandShmBuffer, cbuffer.buffer.resource);
 
-	cogl_handle_unref(buffer->cbuffer.tex_handle);
-	munmap(buffer->data, buffer->size);
-	buffer->data = NULL;
+	/* note, any number of surfaces might still hold a reference to this buffer */
 	g_object_unref(buffer);
 }
 
