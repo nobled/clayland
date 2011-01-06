@@ -522,7 +522,7 @@ clayland_compositor_create(ClutterActor *stage)
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGINT, on_term_signal, compositor);
 
-	compositor->egl_display = clutter_eglx_display ();
+	compositor->egl_display = clutter_egl_display ();
 	fprintf(stderr, "egl display %p\n", compositor->egl_display);
 
 	return compositor;
