@@ -35,7 +35,8 @@ clayland_shm_buffer_finalize (GObject *object)
 	/* The CoglHandle is still holding onto the data, so don't unmap it
 	   until *after* the above call deletes the final reference to
 	   the CoglHandle. */
-	munmap(buffer->data, buffer->size);
+	if (buffer->data != MAP_FAILED)
+		munmap(buffer->data, buffer->size);
 }
 
 static void
@@ -49,6 +50,7 @@ clayland_shm_buffer_class_init (ClaylandShmBufferClass *klass)
 static void
 clayland_shm_buffer_init (ClaylandShmBuffer *buffer)
 {
+	buffer->data = MAP_FAILED;
 }
 
 static void

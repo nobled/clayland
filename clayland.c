@@ -43,7 +43,8 @@ clayland_buffer_finalize (GObject *object)
 {
 	ClaylandBuffer *cbuffer = CLAYLAND_BUFFER(object);
 
-	cogl_handle_unref(cbuffer->tex_handle);
+	if (cbuffer->tex_handle != COGL_INVALID_HANDLE)
+		cogl_handle_unref(cbuffer->tex_handle);
 	G_OBJECT_CLASS (clayland_buffer_parent_class)->finalize (object);
 }
 
@@ -58,6 +59,7 @@ clayland_buffer_class_init (ClaylandBufferClass *klass)
 static void
 clayland_buffer_init (ClaylandBuffer *buffer)
 {
+	cbuffer->tex_handle = COGL_INVALID_HANDLE;
 }
 
 typedef struct ClaylandInputDevice {
