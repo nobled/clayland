@@ -477,6 +477,11 @@ surface_attach(struct wl_client *client,
 	gfloat x, y;
 
 	clutter_actor_get_position (CLUTTER_ACTOR (csurface), &x, &y);
+
+	if (csurface->buffer != NULL)
+		g_object_unref(csurface->buffer);
+	csurface->buffer = g_object_ref(cbuffer);
+
 	buffer->attach(buffer, surface); /* XXX: does nothing right now */
 	clutter_texture_set_cogl_texture(&csurface->texture,
 	                                 cbuffer->tex_handle);
@@ -545,6 +550,9 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 	stage = surface->compositor->stage;
 	clutter_container_remove_actor (CLUTTER_CONTAINER (stage),
 					CLUTTER_ACTOR (surface));
+
+	if (surface->buffer)
+		g_object_unref(surface->buffer);
 	g_object_unref(surface);
 }
 
