@@ -86,7 +86,6 @@ shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 		return;
 	}
 
-	/* override the default Clayland implementation */
 	buffer->cbuffer.buffer.resource.destroy = shm_buffer_destroy;
 
 	buffer->size = stride * height;
