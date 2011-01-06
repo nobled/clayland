@@ -695,8 +695,11 @@ clayland_compositor_create(ClutterActor *stage)
 		(void (**)(void)) &shell_interface;
 	wl_display_add_object(compositor->display, &compositor->shell.object);
 	if (wl_display_add_global(compositor->display,
-				  &compositor->shell.object, NULL))
-		return -1;
+				  &compositor->shell.object, NULL)) {
+		wl_display_destroy (compositor->display);
+		g_object_unref(compositor);
+		return NULL;
+	}
 
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGTERM, on_term_signal, compositor);
