@@ -355,6 +355,7 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 	ClaylandSurface *surface =
 		container_of(resource, ClaylandSurface, surface.resource);
 	ClaylandCompositor *compositor = surface->compositor;
+	ClutterActor *stage;
 	struct wl_listener *l, *next;
 	uint32_t time;
 
@@ -363,6 +364,9 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 			      &surface->surface.destroy_listener_list, link)
 		l->func(l, &surface->surface, time);
 
+	stage = surface->compositor->stage;
+	clutter_container_remove_actor (CLUTTER_CONTAINER (stage),
+					CLUTTER_ACTOR (surface));
 	g_object_unref(surface);
 }
 
@@ -376,8 +380,9 @@ compositor_create_surface(struct wl_client *client,
 
 	surface = g_object_new (clayland_surface_get_type(), NULL);
 
+	surface->compositor = clayland;
 	clutter_container_add_actor(CLUTTER_CONTAINER (clayland->stage),
-				    CLUTTER_ACTOR (&surface->texture));
+				    CLUTTER_ACTOR (surface));
 
 	wl_list_init(&surface->surface.destroy_listener_list);
 	surface->surface.resource.destroy = destroy_surface;
@@ -388,6 +393,10 @@ compositor_create_surface(struct wl_client *client,
 		(void (**)(void)) &surface_interface;
 	surface->surface.client = client;
 
+	/* Clutter actors inherit from GInitiallyUnowned, so the
+	 * container now has the only reference.  We need to take one
+	 * for the wayland resource as well. */
+	g_object_ref (surface);
 	wl_client_add_resource(client, &surface->surface.resource);
 }
 
