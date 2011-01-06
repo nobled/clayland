@@ -104,7 +104,7 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	ClaylandInputDevice *clayland_device;
 	ClaylandSurface *cs;
 	gfloat sx, sy;
-	uint32_t state, button;
+	uint32_t state, button, key;
 
 	clutter_device = clutter_event_get_device (event);
 	if (clutter_device) {
@@ -121,8 +121,6 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 
 	switch (event->type) {
 	case CLUTTER_NOTHING:
-	case CLUTTER_KEY_PRESS:
-	case CLUTTER_KEY_RELEASE:
 	case CLUTTER_STAGE_STATE:
 	case CLUTTER_DESTROY_NOTIFY:
 	case CLUTTER_CLIENT_MESSAGE:
@@ -130,6 +128,21 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	case CLUTTER_SCROLL:
  	default:
 		return FALSE;
+
+	case CLUTTER_KEY_PRESS:
+	case CLUTTER_KEY_RELEASE:
+		state = event->type == CLUTTER_KEY_PRESS ? 1 : 0;
+
+		if (device->keyboard_focus == NULL)
+			return FALSE;
+
+		key = event->key.hardware_keycode - 8;
+		fprintf(stderr, "hw keycode %d\n", key);
+		wl_client_post_event(device->keyboard_focus->client,
+				     &device->object,
+				     WL_INPUT_DEVICE_KEY,
+				     event->any.time, key, state);
+		return TRUE;
 
 	case CLUTTER_MOTION:
 		device->x = event->motion.x;
@@ -177,7 +190,6 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 		/* FIXME: Device is NULL on enter events? */
 		fprintf(stderr, "enter %p\n", event->any.source);
 		return FALSE;
-		break;
 
 	case CLUTTER_LEAVE:
 		fprintf(stderr, "leave %p\n", event->any.source);
@@ -436,32 +448,33 @@ add_devices(ClaylandCompositor *compositor)
 	ClutterInputDevice *device;
 	GSList *list, *l;
 
+	clayland_device = g_new0 (ClaylandInputDevice, 1);
+
+	wl_input_device_init(&clayland_device->input_device,
+			     &compositor->compositor);
+
+	clayland_device->input_device.object.interface =
+		&wl_input_device_interface;
+	clayland_device->input_device.object.implementation =
+		(void (**)(void)) &input_device_interface;
+	wl_display_add_object(compositor->display,
+			      &clayland_device->input_device.object);
+	wl_display_add_global(compositor->display,
+			      &clayland_device->input_device.object,
+			      NULL);
+
+	clayland_device->input_device.motion_grab.interface =
+		&motion_grab_interface;
+
 	device_manager = clutter_device_manager_get_default ();
 	list = clutter_device_manager_list_devices (device_manager);
 
 	for (l = list; l; l = l->next) {
 		fprintf(stderr, "device %p\n", l->data);
 		device = CLUTTER_INPUT_DEVICE (l->data);
-		clayland_device = g_new0 (ClaylandInputDevice, 1);
 
-		wl_input_device_init(&clayland_device->input_device,
-				     &compositor->compositor);
-
-		clayland_device->input_device.object.interface =
-			&wl_input_device_interface;
-		clayland_device->input_device.object.implementation =
-			(void (**)(void)) &input_device_interface;
-		wl_display_add_object(compositor->display,
-				      &clayland_device->input_device.object);
-		wl_display_add_global(compositor->display,
-				      &clayland_device->input_device.object,
-				      NULL);
-
-		clayland_device->input_device.motion_grab.interface =
-			&motion_grab_interface;
-
-		g_object_set_data (G_OBJECT (device), "clayland",
-				   clayland_device);
+		g_object_set_data (G_OBJECT (device),
+				   "clayland", clayland_device);
 	}
 }
 
