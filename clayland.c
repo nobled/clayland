@@ -107,9 +107,12 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	uint32_t state, button;
 
 	clutter_device = clutter_event_get_device (event);
-	clayland_device =
-		g_object_get_data (G_OBJECT(clutter_device), "clayland");
-	device = &clayland_device->input_device;
+	if (clutter_device) {
+		clayland_device =
+			g_object_get_data (G_OBJECT(clutter_device),
+					   "clayland");
+		device = &clayland_device->input_device;
+	}
 
 	if (CLAYLAND_IS_SURFACE (event->any.source))
 		cs = CLAYLAND_SURFACE (event->any.source);
