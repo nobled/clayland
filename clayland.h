@@ -64,6 +64,9 @@ struct _ClaylandCompositor {
 	struct wl_compositor	 compositor;
 	struct wl_object	 shm_object;
 
+	/* We implement the shell interface. */
+	struct wl_shell shell;
+
 	EGLDisplay		 egl_display;
 
 	gint stage_width;
