@@ -68,6 +68,7 @@ struct _ClaylandCompositor {
 	struct wl_shell shell;
 
 	EGLDisplay		 egl_display;
+	EGLContext		 egl_context;
 
 	gint stage_width;
 	gint stage_height;

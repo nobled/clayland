@@ -653,6 +653,19 @@ static void add_buffer_interfaces(ClaylandCompositor *compositor)
 	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
 }
 
+#if defined (COGL_HAS_GL)
+static const EGLint *context_attribs = NULL;
+#else
+static const EGLint context_attribs[] = {
+#if defined(COGL_HAS_GLES2)
+	EGL_CONTEXT_CLIENT_VERSION, 2,
+#elif defined(COGL_HAS_GLES1)
+	EGL_CONTEXT_CLIENT_VERSION, 1,
+#endif
+	EGL_NONE
+};
+#endif
+
 ClaylandCompositor *
 clayland_compositor_create(ClutterActor *stage)
 {
@@ -708,6 +721,16 @@ clayland_compositor_create(ClutterActor *stage)
 
 	compositor->egl_display = clutter_egl_display ();
 	fprintf(stderr, "egl display %p\n", compositor->egl_display);
+	compositor->egl_context = eglCreateContext(compositor->egl_display,
+	                                NULL, EGL_NO_CONTEXT, context_attribs);
+
+	if (compositor->egl_context == EGL_NO_CONTEXT) {
+		fprintf(stderr, "failed to create egl context\n");
+		wl_display_destroy (compositor->display);
+		g_object_unref(compositor);
+		return NULL;
+	}
+	fprintf(stderr, "egl context %p\n", compositor->egl_context);
 
 	return compositor;
 }
