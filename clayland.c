@@ -442,7 +442,7 @@ add_devices(ClaylandCompositor *compositor)
 	for (l = list; l; l = l->next) {
 		fprintf(stderr, "device %p\n", l->data);
 		device = CLUTTER_INPUT_DEVICE (l->data);
-		clayland_device = g_new (ClaylandInputDevice, 1);
+		clayland_device = g_new0 (ClaylandInputDevice, 1);
 
 		wl_input_device_init(&clayland_device->input_device,
 				     &compositor->compositor);
