@@ -82,6 +82,7 @@ struct _ClaylandCompositorClass {
 struct _ClaylandSurface {
 	ClutterTexture		 texture;
 	struct wl_surface	 surface;
+	ClaylandBuffer		*buffer;
 	ClaylandCompositor	*compositor;
 };
 
