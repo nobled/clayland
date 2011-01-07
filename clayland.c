@@ -27,8 +27,24 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 G_DEFINE_TYPE (ClaylandSurface, clayland_surface, CLUTTER_TYPE_TEXTURE);
 
 static void
+clayland_surface_finalize (GObject *object)
+{
+	ClaylandSurface *csurface = CLAYLAND_SURFACE(object);
+
+	G_OBJECT_CLASS (clayland_surface_parent_class)->finalize (object);
+	/* The above call has to come first so that the ClutterTexture class
+	   releases its ref on the CoglHandle, making sure the last ref on the
+	   CoglHandle is always held by the ClaylandBuffer. */
+	if (csurface->buffer)
+		g_object_unref(csurface->buffer);
+}
+
+static void
 clayland_surface_class_init (ClaylandSurfaceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->finalize = clayland_surface_finalize;
 }
 
 static void
@@ -567,8 +583,6 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 	clutter_container_remove_actor (CLUTTER_CONTAINER (stage),
 					CLUTTER_ACTOR (surface));
 
-	if (surface->buffer)
-		g_object_unref(surface->buffer);
 	g_object_unref(surface);
 }
 
