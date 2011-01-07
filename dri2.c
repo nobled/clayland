@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <xcb/xcb.h>
 #include <xcb/dri2.h>
-#include <xcb/xfixes.h>
 #include <clutter/x11/clutter-x11.h>
 #include <X11/Xlib-xcb.h>
 #include <fcntl.h>
@@ -15,8 +14,6 @@ dri2_connect(ClaylandCompositor *compositor)
 	Display *dpy;
 	xcb_connection_t *conn;
 	Window root;
-	xcb_xfixes_query_version_reply_t *xfixes_query;
-	xcb_xfixes_query_version_cookie_t xfixes_query_cookie;
 	xcb_dri2_query_version_reply_t *dri2_query;
 	xcb_dri2_query_version_cookie_t dri2_query_cookie;
 	xcb_dri2_connect_reply_t *connect;
@@ -29,13 +26,7 @@ dri2_connect(ClaylandCompositor *compositor)
 	conn = XGetXCBConnection(dpy);
 	root = clutter_x11_get_root_window ();
 
-	xcb_prefetch_extension_data (conn, &xcb_xfixes_id);
 	xcb_prefetch_extension_data (conn, &xcb_dri2_id);
-
-	xfixes_query_cookie =
-		xcb_xfixes_query_version(conn,
-					 XCB_XFIXES_MAJOR_VERSION,
-					 XCB_XFIXES_MINOR_VERSION);
 
 	dri2_query_cookie =
 		xcb_dri2_query_version (conn,
@@ -45,17 +36,6 @@ dri2_connect(ClaylandCompositor *compositor)
 	connect_cookie = xcb_dri2_connect_unchecked (conn,
 						     root,
 						     XCB_DRI2_DRIVER_TYPE_DRI);
-
-	xfixes_query =
-		xcb_xfixes_query_version_reply (conn,
-						xfixes_query_cookie, &error);
-	if (xfixes_query == NULL ||
-	    error != NULL || xfixes_query->major_version < 2) {
-		free(xfixes_query);
-		free(error);
-		return -1;
-	}
-	free(xfixes_query);
 
 	dri2_query =
 		xcb_dri2_query_version_reply (conn,
