@@ -15,13 +15,31 @@
 G_DEFINE_TYPE (ClaylandCompositor, clayland_compositor, G_TYPE_OBJECT);
 
 static void
+clayland_compositor_finalize (GObject *object)
+{
+	ClaylandCompositor *compositor = CLAYLAND_COMPOSITOR(object);
+
+	if (compositor->drm_fd >= 0)
+		(void) close(compositor->drm_fd);
+	if (compositor->drm_path != NULL)
+		g_free(compositor->drm_path);
+
+	G_OBJECT_CLASS (clayland_compositor_parent_class)->finalize (object);
+}
+
+static void
 clayland_compositor_class_init (ClaylandCompositorClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->finalize = clayland_compositor_finalize;
 }
 
 static void
 clayland_compositor_init (ClaylandCompositor *compositor)
 {
+	compositor->drm_path = NULL;
+	compositor->drm_fd = -1;
 }
 
 
@@ -703,11 +721,9 @@ post_drm_device(struct wl_client *client, struct wl_object *global)
 {
 	ClaylandCompositor *compositor =
 	    container_of(global, ClaylandCompositor, drm_object);
-#if 0
-/* TODO: get the file name and fd from dri2_connect() */
+
 	wl_client_post_event(client, global, WL_DRM_DEVICE,
-	                     compositor->drm_filename);
-#endif
+	                     compositor->drm_path);
 }
 
 static void add_buffer_interfaces(ClaylandCompositor *compositor)
@@ -719,6 +735,11 @@ static void add_buffer_interfaces(ClaylandCompositor *compositor)
 	    (void (**)(void)) &clayland_shm_interface;
 	wl_display_add_object(compositor->display, &compositor->shm_object);
 	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
+
+	if (!compositor->drm_path) {
+		fprintf(stderr, "DRI2 connect failed, disabling DRM buffers\n");
+		return;
+	}
 
 	extensions = eglQueryString(compositor->egl_display, EGL_EXTENSIONS);
 
@@ -781,6 +802,11 @@ clayland_compositor_create(ClutterActor *stage)
 		return NULL;
 	}
 
+	/* Can we figure out whether we're compiling against clutter
+	 * x11 or not? */
+	if (dri2_connect(compositor) < 0)
+		fprintf(stderr, "failed to connect to DRI2\n");
+
 	compositor->egl_display = clutter_egl_display ();
 	fprintf(stderr, "egl display %p\n", compositor->egl_display);
 
@@ -824,10 +850,6 @@ main (int argc, char *argv[])
 
 		return EXIT_FAILURE;
 	}
-
-	/* Can we figure out whether we're compiling against clutter
-	 * x11 or not? */
-	dri2_connect();
 
 	stage = clutter_stage_get_default ();
 	clutter_actor_set_size (stage, 800, 600);

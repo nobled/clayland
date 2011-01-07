@@ -8,6 +8,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <wayland-server.h>
+#include <X11/Xlib-xcb.h>
 
 #if defined(COGL_HAS_GL)
 #include <GL/gl.h>
@@ -47,8 +48,8 @@ typedef struct _ClaylandBufferClass ClaylandBufferClass;
 
 GSource *wl_glib_source_new(struct wl_event_loop *loop);
 
-int dri2_connect(void);
-int dri2_authenticate(uint32_t magic);
+int dri2_connect(ClaylandCompositor *compositor);
+int dri2_authenticate(ClaylandCompositor *compositor, uint32_t magic);
 
 extern const struct wl_drm_interface clayland_drm_interface;
 extern const struct wl_shm_interface clayland_shm_interface;
@@ -82,6 +83,11 @@ struct _ClaylandCompositor {
 	PFNEGLCREATEIMAGEKHRPROC create_image;
 	PFNEGLDESTROYIMAGEKHRPROC destroy_image;
 	PFNGLEGLIMAGETARGETTEXTURE2DOESPROC image2tex;
+
+	int			 drm_fd;
+	char			*drm_path;
+	xcb_connection_t	*xconn;
+	Window			 root_window;
 
 	gint stage_width;
 	gint stage_height;

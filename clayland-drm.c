@@ -137,7 +137,7 @@ drm_authenticate(struct wl_client *client, struct wl_drm *drm, uint32_t magic)
 	ClaylandCompositor *compositor =
 	    container_of((struct wl_object *)drm, ClaylandCompositor, drm_object);
 
-	if (dri2_authenticate(magic) < 0) {
+	if (dri2_authenticate(compositor, magic) < 0) {
 		wl_client_post_event(client,
 				(struct wl_object *)compositor->display,
 				WL_DISPLAY_INVALID_OBJECT, 0);
