@@ -523,9 +523,11 @@ surface_damage(struct wl_client *client,
 {
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
+	ClaylandBuffer *cbuffer = csurface->buffer;
 
-	/* XXX: surface needs a pointer to its bound buffer
-	   in order to call buffer->damage(). */
+	if (cbuffer != NULL)
+		cbuffer->buffer.damage(&cbuffer->buffer, surface,
+		                       x, y, width, height);
 	/* damage event: TODO */
 }
 
