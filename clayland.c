@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <wayland-server.h>
 #include <clutter/clutter.h>
 #include <clutter/egl/clutter-egl.h>
@@ -697,13 +698,53 @@ add_devices(ClaylandCompositor *compositor)
 	}
 }
 
+static void
+post_drm_device(struct wl_client *client, struct wl_object *global)
+{
+	ClaylandCompositor *compositor =
+	    container_of(global, ClaylandCompositor, drm_object);
+#if 0
+/* TODO: get the file name and fd from dri2_connect() */
+	wl_client_post_event(client, global, WL_DRM_DEVICE,
+	                     compositor->drm_filename);
+#endif
+}
+
 static void add_buffer_interfaces(ClaylandCompositor *compositor)
 {
+	const char *extensions;
+
 	compositor->shm_object.interface = &wl_shm_interface;
 	compositor->shm_object.implementation =
 	    (void (**)(void)) &clayland_shm_interface;
 	wl_display_add_object(compositor->display, &compositor->shm_object);
 	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
+
+	extensions = eglQueryString(compositor->egl_display, EGL_EXTENSIONS);
+
+	if(!extensions || !strstr(extensions, "EGL_MESA_drm_image"))
+		return;
+
+	compositor->create_image =
+	    (PFNEGLCREATEIMAGEKHRPROC)
+	        eglGetProcAddress("eglCreateImageKHR");
+	compositor->destroy_image =
+	    (PFNEGLDESTROYIMAGEKHRPROC)
+	        eglGetProcAddress("eglDestroyImageKHR");
+	compositor->image2tex =
+	    (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)
+	        eglGetProcAddress("glEGLImageTargetTexture2DOES");
+
+	if (!(compositor->create_image) || !(compositor->destroy_image)
+	    || !(compositor->image2tex))
+		return;
+
+	compositor->drm_object.interface = &wl_drm_interface;
+	compositor->drm_object.implementation =
+	    (void (**)(void)) &clayland_drm_interface;
+	wl_display_add_object(compositor->display, &compositor->drm_object);
+	wl_display_add_global(compositor->display, &compositor->drm_object,
+	                      post_drm_device);
 }
 
 ClaylandCompositor *
@@ -740,6 +781,9 @@ clayland_compositor_create(ClutterActor *stage)
 		return NULL;
 	}
 
+	compositor->egl_display = clutter_egl_display ();
+	fprintf(stderr, "egl display %p\n", compositor->egl_display);
+
 	add_devices(compositor);
 	add_buffer_interfaces(compositor);
 
@@ -758,9 +802,6 @@ clayland_compositor_create(ClutterActor *stage)
 				 SIGTERM, on_term_signal, compositor);
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGINT, on_term_signal, compositor);
-
-	compositor->egl_display = clutter_egl_display ();
-	fprintf(stderr, "egl display %p\n", compositor->egl_display);
 
 	return compositor;
 }

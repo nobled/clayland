@@ -4,9 +4,18 @@
 #include <clutter/clutter.h>
 #include <cogl/cogl.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <glib.h>
 #include <glib-object.h>
 #include <wayland-server.h>
+
+#if defined(COGL_HAS_GL)
+#include <GL/gl.h>
+#elif defined(COGL_HAS_GLES2)
+#include <GLES2/gl2.h>
+#elif defined(COGL_HAS_GLES1)
+#include <GLES/gl.h>
+#endif
 
 #define CLAYLAND_TYPE_COMPOSITOR            (clayland_compositor_get_type ())
 #define CLAYLAND_COMPOSITOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositor))
@@ -41,6 +50,7 @@ GSource *wl_glib_source_new(struct wl_event_loop *loop);
 int dri2_connect(void);
 int dri2_authenticate(uint32_t magic);
 
+extern const struct wl_drm_interface clayland_drm_interface;
 extern const struct wl_shm_interface clayland_shm_interface;
 
 CoglPixelFormat
@@ -63,11 +73,15 @@ struct _ClaylandCompositor {
 
 	struct wl_compositor	 compositor;
 	struct wl_object	 shm_object;
+	struct wl_object	 drm_object;
 
 	/* We implement the shell interface. */
 	struct wl_shell shell;
 
 	EGLDisplay		 egl_display;
+	PFNEGLCREATEIMAGEKHRPROC create_image;
+	PFNEGLDESTROYIMAGEKHRPROC destroy_image;
+	PFNGLEGLIMAGETARGETTEXTURE2DOESPROC image2tex;
 
 	gint stage_width;
 	gint stage_height;
