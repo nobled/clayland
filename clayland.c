@@ -59,7 +59,7 @@ clayland_buffer_class_init (ClaylandBufferClass *klass)
 static void
 clayland_buffer_init (ClaylandBuffer *buffer)
 {
-	cbuffer->tex_handle = COGL_INVALID_HANDLE;
+	buffer->tex_handle = COGL_INVALID_HANDLE;
 }
 
 typedef struct ClaylandInputDevice {
