@@ -27,6 +27,23 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 G_DEFINE_TYPE (ClaylandSurface, clayland_surface, CLUTTER_TYPE_TEXTURE);
 
 static void
+clayland_surface_dispose (GObject *object)
+{
+	ClaylandSurface *csurface = CLAYLAND_SURFACE(object);
+	ClutterActor *stage;
+
+	G_OBJECT_CLASS (clayland_surface_parent_class)->dispose (object);
+
+	if (csurface->compositor == NULL)
+		return;
+	stage = csurface->compositor->stage;
+	clutter_container_remove_actor (CLUTTER_CONTAINER (stage),
+					CLUTTER_ACTOR (csurface));
+	g_object_unref(csurface->compositor);
+	csurface->compositor = NULL;
+}
+
+static void
 clayland_surface_finalize (GObject *object)
 {
 	ClaylandSurface *csurface = CLAYLAND_SURFACE(object);
@@ -44,12 +61,15 @@ clayland_surface_class_init (ClaylandSurfaceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+	object_class->dispose  = clayland_surface_dispose;
 	object_class->finalize = clayland_surface_finalize;
 }
 
 static void
 clayland_surface_init (ClaylandSurface *surface)
 {
+	surface->buffer = NULL;
+	surface->compositor = NULL;
 }
 
 G_DEFINE_TYPE (ClaylandBuffer, clayland_buffer, G_TYPE_OBJECT);
@@ -570,7 +590,6 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 	ClaylandSurface *surface =
 		container_of(resource, ClaylandSurface, surface.resource);
 	ClaylandCompositor *compositor = surface->compositor;
-	ClutterActor *stage;
 	struct wl_listener *l, *next;
 	uint32_t time;
 
@@ -578,10 +597,6 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 	wl_list_for_each_safe(l, next,
 			      &surface->surface.destroy_listener_list, link)
 		l->func(l, &surface->surface, time);
-
-	stage = surface->compositor->stage;
-	clutter_container_remove_actor (CLUTTER_CONTAINER (stage),
-					CLUTTER_ACTOR (surface));
 
 	g_object_unref(surface);
 }
@@ -596,7 +611,7 @@ compositor_create_surface(struct wl_client *client,
 
 	surface = g_object_new (clayland_surface_get_type(), NULL);
 
-	surface->compositor = clayland;
+	surface->compositor = g_object_ref (clayland);
 	clutter_container_add_actor(CLUTTER_CONTAINER (clayland->stage),
 				    CLUTTER_ACTOR (surface));
 
