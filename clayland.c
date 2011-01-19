@@ -19,6 +19,8 @@ clayland_compositor_finalize (GObject *object)
 {
 	ClaylandCompositor *compositor = CLAYLAND_COMPOSITOR(object);
 
+	if (!clutter_stage_is_default(CLUTTER_STAGE(compositor->stage)))
+		g_object_unref(compositor->stage);
 	if (compositor->drm_fd >= 0)
 		(void) close(compositor->drm_fd);
 	if (compositor->drm_path != NULL)
@@ -38,6 +40,7 @@ clayland_compositor_class_init (ClaylandCompositorClass *klass)
 static void
 clayland_compositor_init (ClaylandCompositor *compositor)
 {
+	compositor->stage = NULL;
 	compositor->drm_path = NULL;
 	compositor->drm_fd = -1;
 }
@@ -776,8 +779,14 @@ clayland_compositor_create(ClutterActor *stage)
 {
 	ClaylandCompositor *compositor;
 
+	g_return_val_if_fail(CLUTTER_IS_STAGE(stage), NULL);
+
 	compositor = g_object_new (clayland_compositor_get_type(), NULL);
-	compositor->stage = stage;
+
+	if (!clutter_stage_is_default(CLUTTER_STAGE(stage)))
+		compositor->stage = g_object_ref_sink(stage);
+	else
+		compositor->stage = stage;
 
 	compositor->display = wl_display_create();
 	if (compositor->display == NULL) {
