@@ -521,7 +521,7 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 	if (visual == &compositor->compositor.argb_visual)
 		return COGL_PIXEL_FORMAT_BGRA_8888;
 	if (visual == &compositor->compositor.rgb_visual)
-		return COGL_PIXEL_FORMAT_BGRA_8888;
+		return COGL_PIXEL_FORMAT_BGR_888;
 
 	/* unknown visual. */
 	return COGL_PIXEL_FORMAT_ANY;
