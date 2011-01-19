@@ -67,6 +67,7 @@ GType clayland_buffer_get_type(void);
 struct _ClaylandCompositor {
 	GObject			 object;
 	ClutterActor		*stage;
+	gulong			 event_handler_id;
 	GSource			*source;
 	struct wl_display	*display;
 	struct wl_event_loop	*loop;

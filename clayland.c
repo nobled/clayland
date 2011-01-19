@@ -23,6 +23,10 @@ clayland_compositor_finalize (GObject *object)
 		g_source_destroy(compositor->source);
 		g_source_unref(compositor->source);
 	}
+	if (g_signal_handler_is_connected(compositor->stage,
+		            compositor->event_handler_id))
+		g_signal_handler_disconnect(compositor->stage,
+		                compositor->event_handler_id);
 	if (!clutter_stage_is_default(CLUTTER_STAGE(compositor->stage)))
 		g_object_unref(compositor->stage);
 	if (compositor->drm_fd >= 0)
@@ -45,6 +49,7 @@ static void
 clayland_compositor_init (ClaylandCompositor *compositor)
 {
 	compositor->source = NULL;
+	compositor->event_handler_id = 0;
 	compositor->stage = NULL;
 	compositor->drm_path = NULL;
 	compositor->drm_fd = -1;
@@ -884,7 +889,8 @@ clayland_compositor_create(ClutterActor *stage)
 		return NULL;
 	}
 
-	g_signal_connect (stage, "captured-event",
+	compositor->event_handler_id =
+	    g_signal_connect (stage, "captured-event",
 			  G_CALLBACK (event_cb),
 			  compositor);
 
