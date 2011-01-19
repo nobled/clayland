@@ -919,10 +919,6 @@ main (int argc, char *argv[])
 	clutter_stage_set_color (CLUTTER_STAGE (stage), &stage_color);
 	clutter_stage_set_user_resizable (CLUTTER_STAGE (stage), TRUE);
 
-	compositor = clayland_compositor_create(stage);
-	if (!compositor)
-		return EXIT_FAILURE;
-
 	hand = clutter_texture_new_from_file ("redhand.png", &error);
 	if (hand == NULL)
 		g_error ("image load failed: %s", error->message);
@@ -937,6 +933,10 @@ main (int argc, char *argv[])
 	clutter_container_add_actor (CLUTTER_CONTAINER (stage), hand);
 	/* Show everying */
 	clutter_actor_show (stage);
+
+	compositor = clayland_compositor_create(stage);
+	if (!compositor)
+		return EXIT_FAILURE;
 
 	g_signal_connect (stage, "captured-event",
 			  G_CALLBACK (event_cb),
