@@ -890,9 +890,9 @@ clayland_compositor_create(ClutterActor *stage)
 	}
 
 	compositor->event_handler_id =
-	    g_signal_connect (stage, "captured-event",
+	    g_signal_connect_object (stage, "captured-event",
 			  G_CALLBACK (event_cb),
-			  compositor);
+			  compositor, 0);
 
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGTERM, on_term_signal, compositor);
