@@ -777,6 +777,8 @@ post_drm_device(struct wl_client *client, struct wl_object *global)
 	ClaylandCompositor *compositor =
 	    container_of(global, ClaylandCompositor, drm_object);
 
+	g_debug("Advertising DRM device: %s", compositor->drm_path);
+
 	wl_client_post_event(client, global, WL_DRM_DEVICE,
 	                     compositor->drm_path);
 }
