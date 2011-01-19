@@ -420,11 +420,11 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 
 	case CLUTTER_ENTER:
 		/* FIXME: Device is NULL on enter events? */
-		fprintf(stderr, "enter %p\n", event->any.source);
+		g_debug("enter %p", event->any.source);
 		return FALSE;
 
 	case CLUTTER_LEAVE:
-		fprintf(stderr, "leave %p\n", event->any.source);
+		g_debug("leave %p", event->any.source);
 		return FALSE;
 
 	case CLUTTER_BUTTON_PRESS:
@@ -711,7 +711,7 @@ add_devices(ClaylandCompositor *compositor)
 	list = clutter_device_manager_list_devices (device_manager);
 
 	for (l = list; l; l = l->next) {
-		fprintf(stderr, "device %p\n", l->data);
+		g_debug("device %p", l->data);
 		device = CLUTTER_INPUT_DEVICE (l->data);
 
 		g_object_set_data (G_OBJECT (device),
@@ -740,7 +740,7 @@ static void add_buffer_interfaces(ClaylandCompositor *compositor)
 	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
 
 	if (!compositor->drm_path) {
-		fprintf(stderr, "DRI2 connect failed, disabling DRM buffers\n");
+		g_warning("DRI2 connect failed, disabling DRM buffers");
 		return;
 	}
 
@@ -781,7 +781,7 @@ clayland_compositor_create(ClutterActor *stage)
 
 	compositor->display = wl_display_create();
 	if (compositor->display == NULL) {
-		fprintf(stderr, "failed to create display: %m\n");
+		g_warning("failed to create display: %m");
 		g_object_unref(compositor);
 		return NULL;
 	}
@@ -791,7 +791,7 @@ clayland_compositor_create(ClutterActor *stage)
 	g_source_attach(compositor->source, NULL);
 
 	if (wl_display_add_socket(compositor->display, NULL)) {
-		fprintf(stderr, "failed to add socket: %m\n");
+		g_warning("failed to add socket: %m");
 		wl_display_destroy (compositor->display);
 		g_object_unref(compositor);
 		return NULL;
@@ -808,10 +808,10 @@ clayland_compositor_create(ClutterActor *stage)
 	/* Can we figure out whether we're compiling against clutter
 	 * x11 or not? */
 	if (dri2_connect(compositor) < 0)
-		fprintf(stderr, "failed to connect to DRI2\n");
+		g_warning("failed to connect to DRI2");
 
 	compositor->egl_display = clutter_egl_display ();
-	fprintf(stderr, "egl display %p\n", compositor->egl_display);
+	g_debug("egl display %p", compositor->egl_display);
 
 	add_devices(compositor);
 	add_buffer_interfaces(compositor);

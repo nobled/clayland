@@ -2,7 +2,6 @@
 #include <cogl/cogl.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <stdio.h>
 
 #include "clayland.h"
 
@@ -107,7 +106,7 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 	                          EGL_DRM_BUFFER_MESA,
 	                          (EGLClientBuffer)name, attribs);
 	if (image == NULL) {
-		fprintf(stderr, "failed to create EGLImage\n");
+		g_warning("failed to create EGLImage");
 		/* XXX: report error? */
 		g_object_unref(buffer);
 		return;
@@ -123,7 +122,7 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 	                (GLuint)width, (GLuint)height, 0, 0, pformat);
 
 	if (buffer->cbuffer.tex_handle == COGL_INVALID_HANDLE) {
-		fprintf(stderr, "failed to create CoglHandle\n");
+		g_warning("failed to create CoglHandle");
 		g_object_unref(buffer);
 		return;
 	}
