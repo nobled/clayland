@@ -884,6 +884,10 @@ clayland_compositor_create(ClutterActor *stage)
 		return NULL;
 	}
 
+	g_signal_connect (stage, "captured-event",
+			  G_CALLBACK (event_cb),
+			  compositor);
+
 	wl_event_loop_add_signal(compositor->loop,
 				 SIGTERM, on_term_signal, compositor);
 	wl_event_loop_add_signal(compositor->loop,
@@ -937,10 +941,6 @@ main (int argc, char *argv[])
 	compositor = clayland_compositor_create(stage);
 	if (!compositor)
 		return EXIT_FAILURE;
-
-	g_signal_connect (stage, "captured-event",
-			  G_CALLBACK (event_cb),
-			  compositor);
 
 	clutter_main ();
 
