@@ -722,6 +722,36 @@ add_devices(ClaylandCompositor *compositor)
 	}
 }
 
+static gboolean
+has_egl_extension(EGLDisplay dpy, size_t target_len, const char *target)
+{
+	const char *extensions, *ext, *next;
+	size_t len;
+
+	extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+	ext = extensions;
+	while (ext) {
+		next = strchr(ext, ' ');
+		if (next) {
+			len = (size_t)(next - ext);
+			next++; /* point to the next extension string */
+			if (len != target_len)
+				goto no_match;
+		} else {
+		/* if 'ext' is the last extension string,
+		   include the target's null terminator in the comparison */
+			len = target_len+1;
+		}
+
+		if (strncmp(target, ext, len) == 0)
+			break;
+no_match:
+		ext = next;
+	};
+
+	return ext != NULL;
+}
+
 static void
 post_drm_device(struct wl_client *client, struct wl_object *global)
 {
@@ -734,8 +764,6 @@ post_drm_device(struct wl_client *client, struct wl_object *global)
 
 static void add_buffer_interfaces(ClaylandCompositor *compositor)
 {
-	const char *extensions;
-
 	compositor->shm_object.interface = &wl_shm_interface;
 	compositor->shm_object.implementation =
 	    (void (**)(void)) &clayland_shm_interface;
@@ -747,9 +775,8 @@ static void add_buffer_interfaces(ClaylandCompositor *compositor)
 		return;
 	}
 
-	extensions = eglQueryString(compositor->egl_display, EGL_EXTENSIONS);
-
-	if(!extensions || !strstr(extensions, "EGL_MESA_drm_image"))
+	if (!has_egl_extension(compositor->egl_display,
+	                       18, "EGL_MESA_drm_image"))
 		return;
 
 	compositor->create_image =
