@@ -50,7 +50,7 @@ clayland_drm_buffer_class_init (ClaylandDrmBufferClass *klass)
 static void
 clayland_drm_buffer_init (ClaylandDrmBuffer *buffer)
 {
-
+	buffer->gltex_handle = 0;
 }
 
 static void
