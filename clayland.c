@@ -931,16 +931,16 @@ main (int argc, char *argv[])
 
 	hand = clutter_texture_new_from_file ("redhand.png", &error);
 	if (hand == NULL)
-		g_error ("image load failed: %s", error->message);
-
-	clutter_actor_set_reactive (hand, TRUE);
-	clutter_actor_set_size (hand, 200, 213);
-	clutter_actor_set_position (hand, 200, 200);
-	clutter_actor_move_anchor_point_from_gravity (hand,
+		g_warning ("image load failed: %s", error->message);
+	else {
+		clutter_actor_set_reactive (hand, TRUE);
+		clutter_actor_set_size (hand, 200, 213);
+		clutter_actor_set_position (hand, 200, 200);
+		clutter_actor_move_anchor_point_from_gravity (hand,
 						      CLUTTER_GRAVITY_CENTER);
-
-	/* Add to our group group */
-	clutter_container_add_actor (CLUTTER_CONTAINER (stage), hand);
+		/* Add to our group group */
+		clutter_container_add_actor (CLUTTER_CONTAINER (stage), hand);
+	}
 	/* Show everying */
 	clutter_actor_show (stage);
 
