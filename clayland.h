@@ -66,7 +66,6 @@ GType clayland_buffer_get_type(void);
 
 struct _ClaylandCompositor {
 	GObject			 object;
-	ClutterActor		*hand;
 	ClutterActor		*stage;
 	GSource			*source;
 	struct wl_display	*display;

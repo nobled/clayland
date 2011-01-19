@@ -895,7 +895,7 @@ clayland_compositor_create(ClutterActor *stage)
 int
 main (int argc, char *argv[])
 {
-	ClutterActor *stage;
+	ClutterActor *stage, *hand;
 	ClutterColor  stage_color = { 0x61, 0x64, 0x8c, 0xff };
 	ClaylandCompositor *compositor;
 	GError       *error;
@@ -923,18 +923,18 @@ main (int argc, char *argv[])
 	if (!compositor)
 		return EXIT_FAILURE;
 
-	compositor->hand = clutter_texture_new_from_file ("redhand.png", &error);
-	if (compositor->hand == NULL)
+	hand = clutter_texture_new_from_file ("redhand.png", &error);
+	if (hand == NULL)
 		g_error ("image load failed: %s", error->message);
 
-	clutter_actor_set_reactive (compositor->hand, TRUE);
-	clutter_actor_set_size (compositor->hand, 200, 213);
-	clutter_actor_set_position (compositor->hand, 200, 200);
-	clutter_actor_move_anchor_point_from_gravity (compositor->hand,
+	clutter_actor_set_reactive (hand, TRUE);
+	clutter_actor_set_size (hand, 200, 213);
+	clutter_actor_set_position (hand, 200, 200);
+	clutter_actor_move_anchor_point_from_gravity (hand,
 						      CLUTTER_GRAVITY_CENTER);
 
 	/* Add to our group group */
-	clutter_container_add_actor (CLUTTER_CONTAINER (stage), compositor->hand);
+	clutter_container_add_actor (CLUTTER_CONTAINER (stage), hand);
 	/* Show everying */
 	clutter_actor_show (stage);
 
