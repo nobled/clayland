@@ -927,9 +927,6 @@ main (int argc, char *argv[])
 	if (compositor->hand == NULL)
 		g_error ("image load failed: %s", error->message);
 
-	compositor->stage_width = clutter_actor_get_width (stage);
-	compositor->stage_height = clutter_actor_get_height (stage);
-
 	clutter_actor_set_reactive (compositor->hand, TRUE);
 	clutter_actor_set_size (compositor->hand, 200, 213);
 	clutter_actor_set_position (compositor->hand, 200, 200);

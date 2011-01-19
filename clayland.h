@@ -88,9 +88,6 @@ struct _ClaylandCompositor {
 	char			*drm_path;
 	xcb_connection_t	*xconn;
 	Window			 root_window;
-
-	gint stage_width;
-	gint stage_height;
 };
 
 struct _ClaylandCompositorClass {
