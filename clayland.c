@@ -504,6 +504,9 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
                       uint32_t id, int32_t width, int32_t height,
                       struct wl_visual *visual)
 {
+	g_return_val_if_fail(width >= 0 && height >= 0,
+	                     COGL_PIXEL_FORMAT_ANY);
+
 	cbuffer->buffer.compositor = &compositor->compositor;
 	cbuffer->buffer.width = width;
 	cbuffer->buffer.height = height;
