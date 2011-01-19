@@ -492,8 +492,21 @@ default_buffer_damage(struct wl_buffer *buffer,
 }
 
 static void
+resource_destroy_buffer(struct wl_resource *resource, struct wl_client *client)
+{
+	ClaylandBuffer *buffer =
+		container_of(resource, ClaylandBuffer, buffer.resource);
+
+	/* Note: Any number of surfaces might still hold a reference to this buffer.
+	   See the _finalize methods for ClaylandBuffer (above) and its subclasses
+	   (in clayland-drm.c and clayland-shm.c). */
+	g_object_unref(buffer);
+}
+
+static void
 client_destroy_buffer(struct wl_client *client, struct wl_buffer *buffer)
 {
+	/* indirectly calls resource_destroy_buffer() */
 	wl_resource_destroy(&buffer->resource, client);
 }
 
@@ -517,6 +530,7 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 	cbuffer->buffer.attach = default_buffer_attach;
 	cbuffer->buffer.damage = default_buffer_damage;
 
+	cbuffer->buffer.resource.destroy = resource_destroy_buffer;
 	cbuffer->buffer.resource.object.id = id;
 	cbuffer->buffer.resource.object.interface = &wl_buffer_interface;
 	cbuffer->buffer.resource.object.implementation = (void (**)(void))

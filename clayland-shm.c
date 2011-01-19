@@ -54,16 +54,6 @@ clayland_shm_buffer_init (ClaylandShmBuffer *buffer)
 }
 
 static void
-shm_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
-{
-	ClaylandShmBuffer *buffer =
-		container_of(resource, ClaylandShmBuffer, cbuffer.buffer.resource);
-
-	/* note, any number of surfaces might still hold a reference to this buffer */
-	g_object_unref(buffer);
-}
-
-static void
 shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 		  uint32_t id, int fd, int32_t width, int32_t height,
 		  uint32_t stride, struct wl_visual *visual)
@@ -87,8 +77,6 @@ shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 		g_object_unref(buffer);
 		return;
 	}
-
-	buffer->cbuffer.buffer.resource.destroy = shm_buffer_destroy;
 
 	buffer->size = stride * height;
 	buffer->data = mmap(NULL, buffer->size,

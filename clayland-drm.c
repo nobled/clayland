@@ -54,16 +54,6 @@ clayland_drm_buffer_init (ClaylandDrmBuffer *buffer)
 }
 
 static void
-drm_buffer_destroy(struct wl_resource *resource, struct wl_client *client)
-{
-	ClaylandDrmBuffer *buffer =
-		container_of(resource, ClaylandDrmBuffer, cbuffer.buffer.resource);
-
-	/* note, any number of surfaces might still hold a reference to this buffer */
-	g_object_unref(buffer);
-}
-
-static void
 drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
                   uint32_t id, uint32_t name, int32_t width, int32_t height,
                   uint32_t stride, struct wl_visual *visual)
@@ -94,8 +84,6 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 		g_object_unref(buffer);
 		return;
 	}
-
-	buffer->cbuffer.buffer.resource.destroy = drm_buffer_destroy;
 
 	attribs[1] = width;
 	attribs[3] = height;
