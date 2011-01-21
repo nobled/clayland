@@ -62,15 +62,11 @@ static void
 clayland_surface_dispose (GObject *object)
 {
 	ClaylandSurface *csurface = CLAYLAND_SURFACE(object);
-	ClutterActor *stage;
 
 	G_OBJECT_CLASS (clayland_surface_parent_class)->dispose (object);
 
 	if (csurface->compositor == NULL)
 		return;
-	stage = csurface->compositor->stage;
-	clutter_container_remove_actor (CLUTTER_CONTAINER (stage),
-					CLUTTER_ACTOR (csurface));
 	g_object_unref(csurface->compositor);
 	csurface->compositor = NULL;
 }
@@ -638,7 +634,7 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 {
 	ClaylandSurface *surface =
 		container_of(resource, ClaylandSurface, surface.resource);
-	ClaylandCompositor *compositor = surface->compositor;
+	ClutterActor *stage = surface->compositor->stage;
 	struct wl_listener *l, *next;
 	uint32_t time;
 
@@ -647,6 +643,8 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 			      &surface->surface.destroy_listener_list, link)
 		l->func(l, &surface->surface, time);
 
+	clutter_container_remove_actor (CLUTTER_CONTAINER (stage),
+					CLUTTER_ACTOR (surface));
 	g_object_unref(surface);
 }
 
