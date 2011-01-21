@@ -19,6 +19,8 @@ clayland_compositor_finalize (GObject *object)
 {
 	ClaylandCompositor *compositor = CLAYLAND_COMPOSITOR(object);
 
+	g_debug("finalizing ClaylandCompositor %p", object);
+
 	if (compositor->source != NULL) {
 		g_source_destroy(compositor->source);
 		g_source_unref(compositor->source);
@@ -48,6 +50,8 @@ clayland_compositor_class_init (ClaylandCompositorClass *klass)
 static void
 clayland_compositor_init (ClaylandCompositor *compositor)
 {
+	g_debug("initializing ClaylandCompositor %p", compositor);
+
 	compositor->source = NULL;
 	compositor->event_handler_id = 0;
 	compositor->stage = NULL;
@@ -63,6 +67,8 @@ clayland_surface_dispose (GObject *object)
 {
 	ClaylandSurface *csurface = CLAYLAND_SURFACE(object);
 
+	g_debug("disposing ClaylandSurface %p", object);
+
 	G_OBJECT_CLASS (clayland_surface_parent_class)->dispose (object);
 
 	if (csurface->compositor == NULL)
@@ -75,6 +81,8 @@ static void
 clayland_surface_finalize (GObject *object)
 {
 	ClaylandSurface *csurface = CLAYLAND_SURFACE(object);
+
+	g_debug("finalizing ClaylandSurface %p", object);
 
 	G_OBJECT_CLASS (clayland_surface_parent_class)->finalize (object);
 	/* The above call has to come first so that the ClutterTexture class
@@ -96,6 +104,7 @@ clayland_surface_class_init (ClaylandSurfaceClass *klass)
 static void
 clayland_surface_init (ClaylandSurface *surface)
 {
+	g_debug("initializing ClaylandSurface %p", surface);
 	surface->buffer = NULL;
 	surface->compositor = NULL;
 }
@@ -637,6 +646,8 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 	ClutterActor *stage = surface->compositor->stage;
 	struct wl_listener *l, *next;
 	uint32_t time;
+
+	g_debug("destroying ClaylandSurface %p", surface);
 
 	time = get_time();
 	wl_list_for_each_safe(l, next,
