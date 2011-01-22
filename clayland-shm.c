@@ -92,8 +92,6 @@ shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 	                flags, pformat, COGL_PIXEL_FORMAT_ANY, stride, buffer->data);
 
 	if (buffer->cbuffer.tex_handle == COGL_INVALID_HANDLE) {
-		/* XXX: move munmap into GObject destructor? */
-		munmap(buffer->data, buffer->size);
 		g_object_unref(buffer);
 		return;
 	}
