@@ -1,7 +1,6 @@
+#include <glib.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include "wayland-server.h"
-#include "clayland.h"
+#include <wayland-server.h>
 
 typedef struct _WlSource {
 	GSource source;
