@@ -1,11 +1,9 @@
 #include <glib.h>
-#include <stdint.h>
 #include <wayland-server.h>
 
 typedef struct _WlSource {
 	GSource source;
 	GPollFD pfd;
-	uint32_t mask;
 	struct wl_event_loop *loop;
 } WlSource;
 
@@ -45,16 +43,6 @@ static GSourceFuncs wl_glib_source_funcs = {
 	wl_glib_source_dispatch,
 	NULL
 };
-
-static int
-wl_glib_source_update(uint32_t mask, void *data)
-{
-	WlSource *source = data;
-
-	source->mask = mask;
-
-	return 0;
-}
 
 GSource *
 wl_glib_source_new(struct wl_event_loop *loop)
