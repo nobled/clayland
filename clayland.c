@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <glib.h>
 
-#include "clayland.h"
+#include "clayland-private.h"
 
 G_DEFINE_TYPE (ClaylandCompositor, clayland_compositor, G_TYPE_OBJECT);
 

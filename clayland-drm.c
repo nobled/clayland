@@ -3,7 +3,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include "clayland.h"
+#include "clayland-private.h"
 
 #define CLAYLAND_TYPE_DRM_BUFFER            (clayland_drm_buffer_get_type ())
 #define CLAYLAND_DRM_BUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_DRM_BUFFER, ClaylandDrmBuffer))
