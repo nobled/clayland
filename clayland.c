@@ -612,6 +612,28 @@ surface_map_toplevel(struct wl_client *client,
 }
 
 static void
+surface_map_transient(struct wl_client *client,
+	    struct wl_surface *surface, struct wl_surface *parent,
+	    int32_t dx, int32_t dy, uint32_t flags)
+{
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
+	ClaylandSurface *cparent =
+		container_of(parent, ClaylandSurface, surface);
+	gfloat x, y;
+
+	if (CLUTTER_ACTOR_IS_MAPPED(CLUTTER_ACTOR (csurface)))
+		return;
+
+	clutter_actor_get_position (CLUTTER_ACTOR (cparent), &x, &y);
+	clutter_actor_set_position (CLUTTER_ACTOR (csurface),
+				    x + dx, y + dy);
+
+	clutter_actor_show (CLUTTER_ACTOR (csurface));
+	clutter_actor_set_reactive (CLUTTER_ACTOR (csurface), TRUE);
+}
+
+static void
 surface_damage(struct wl_client *client,
 	       struct wl_surface *surface,
 	       int32_t x, int32_t y, int32_t width, int32_t height)
@@ -630,6 +652,7 @@ const static struct wl_surface_interface surface_interface = {
 	surface_destroy,
 	surface_attach,
 	surface_map_toplevel,
+	surface_map_transient,
 	surface_damage
 };
 
