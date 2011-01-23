@@ -226,17 +226,17 @@ resize_grab_motion(struct wl_grab *grab,
 	struct wl_surface *surface = device->pointer_focus;
 	int32_t width, height;
 
-	if (resize->edges & WL_GRAB_RESIZE_LEFT) {
+	if (resize->edges & WL_SHELL_RESIZE_LEFT) {
 		width = device->grab_x - x + resize->width;
-	} else if (resize->edges & WL_GRAB_RESIZE_RIGHT) {
+	} else if (resize->edges & WL_SHELL_RESIZE_RIGHT) {
 		width = x - device->grab_x + resize->width;
 	} else {
 		width = resize->width;
 	}
 
-	if (resize->edges & WL_GRAB_RESIZE_TOP) {
+	if (resize->edges & WL_SHELL_RESIZE_TOP) {
 		height = device->grab_y - y + resize->height;
-	} else if (resize->edges & WL_GRAB_RESIZE_BOTTOM) {
+	} else if (resize->edges & WL_SHELL_RESIZE_BOTTOM) {
 		height = y - device->grab_y + resize->height;
 	} else {
 		height = resize->height;
