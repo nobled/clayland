@@ -93,7 +93,7 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 	                          EGL_NO_CONTEXT,
 	                          EGL_DRM_BUFFER_MESA,
 	                          (EGLClientBuffer)name, attribs);
-	if (image == NULL) {
+	if (image == EGL_NO_IMAGE_KHR) {
 		g_warning("failed to create EGLImage");
 		/* XXX: report error? */
 		g_object_unref(buffer);
