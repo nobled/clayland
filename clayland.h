@@ -46,6 +46,8 @@ typedef struct _ClaylandSurfaceClass ClaylandSurfaceClass;
 typedef struct _ClaylandBuffer ClaylandBuffer;
 typedef struct _ClaylandBufferClass ClaylandBufferClass;
 
+ClaylandCompositor *clayland_compositor_create(ClutterActor *stage);
+
 GSource *wl_glib_source_new(struct wl_event_loop *loop);
 
 int dri2_connect(ClaylandCompositor *compositor);
