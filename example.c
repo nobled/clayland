@@ -11,6 +11,9 @@ main (int argc, char *argv[])
 	ClaylandCompositor *compositor;
 	GError       *error;
 
+	g_thread_init(NULL);
+	clutter_threads_init();
+
 	error = NULL;
 
 	clutter_init_with_args (&argc, &argv, NULL, NULL, NULL, &error);
@@ -49,7 +52,9 @@ main (int argc, char *argv[])
 	if (!compositor)
 		return EXIT_FAILURE;
 
+	clutter_threads_enter();
 	clutter_main ();
+	clutter_threads_leave();
 
 	g_object_unref (compositor);
 
