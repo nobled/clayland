@@ -2,7 +2,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "clayland.h"
+#include "clayland-private.h"
 
 #define CLAYLAND_TYPE_SHM_BUFFER            (clayland_shm_buffer_get_type ())
 #define CLAYLAND_SHM_BUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_SHM_BUFFER, ClaylandShmBuffer))

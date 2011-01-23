@@ -32,7 +32,11 @@ wl_glib_source_dispatch(GSource *base,
 {
 	WlSource *source = (WlSource *) base;
 
+	/* The various callbacks will call into the Clutter API,
+	   so we need to hold the global lock. */
+	clutter_threads_enter();
 	wl_event_loop_dispatch(source->loop, 0);
+	clutter_threads_leave();
 
 	return TRUE;
 }

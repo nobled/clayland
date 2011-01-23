@@ -5,7 +5,7 @@
 #include <X11/Xlib-xcb.h>
 #include <fcntl.h>
 
-#include "clayland.h"
+#include "clayland-private.h"
 #include "clayland-config.h"
 
 int
