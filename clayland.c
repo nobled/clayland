@@ -31,6 +31,8 @@ clayland_compositor_finalize (GObject *object)
 		                compositor->event_handler_id);
 	if (!clutter_stage_is_default(CLUTTER_STAGE(compositor->stage)))
 		g_object_unref(compositor->stage);
+	if (compositor->display != NULL)
+		wl_display_destroy (compositor->display);
 	if (compositor->drm_fd >= 0)
 		(void) close(compositor->drm_fd);
 	if (compositor->drm_path != NULL)
@@ -53,6 +55,7 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 	g_debug("initializing compositor %p of type '%s'", compositor,
 	        G_OBJECT_TYPE_NAME(compositor));
 
+	compositor->display = NULL;
 	compositor->source = NULL;
 	compositor->event_handler_id = 0;
 	compositor->stage = NULL;
@@ -891,7 +894,6 @@ clayland_compositor_create(ClutterActor *stage)
 
 	if (wl_display_add_socket(compositor->display, NULL)) {
 		g_warning("failed to add socket: %m");
-		wl_display_destroy (compositor->display);
 		g_object_unref(compositor);
 		return NULL;
 	}
@@ -899,7 +901,6 @@ clayland_compositor_create(ClutterActor *stage)
 	if (wl_compositor_init(&compositor->compositor,
 			       &compositor_interface,
 			       compositor->display) < 0) {
-		wl_display_destroy (compositor->display);
 		g_object_unref(compositor);
 		return NULL;
 	}
@@ -921,7 +922,6 @@ clayland_compositor_create(ClutterActor *stage)
 	wl_display_add_object(compositor->display, &compositor->shell.object);
 	if (wl_display_add_global(compositor->display,
 				  &compositor->shell.object, NULL)) {
-		wl_display_destroy (compositor->display);
 		g_object_unref(compositor);
 		return NULL;
 	}

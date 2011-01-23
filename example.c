@@ -51,7 +51,6 @@ main (int argc, char *argv[])
 
 	clutter_main ();
 
-	wl_display_destroy (compositor->display);
 	g_object_unref (compositor);
 
 	return EXIT_SUCCESS;
