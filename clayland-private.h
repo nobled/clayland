@@ -49,6 +49,9 @@ extern const struct wl_drm_interface clayland_drm_interface;
 extern const struct wl_shm_interface clayland_shm_interface;
 extern const struct wl_shell_interface clayland_shell_interface;
 
+void
+_clayland_add_devices(ClaylandCompositor *compositor);
+
 CoglPixelFormat
 _clayland_init_buffer(ClaylandBuffer *cbuffer,
                       ClaylandCompositor *compositor,
