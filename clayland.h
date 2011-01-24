@@ -5,6 +5,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
+G_BEGIN_DECLS
+
 #define CLAYLAND_TYPE_COMPOSITOR            (clayland_compositor_get_type ())
 #define CLAYLAND_COMPOSITOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositor))
 #define CLAYLAND_COMPOSITOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositorClass))
@@ -18,5 +20,7 @@ typedef struct _ClaylandCompositorClass ClaylandCompositorClass;
 GType clayland_compositor_get_type(void);
 
 ClaylandCompositor *clayland_compositor_create(ClutterActor *stage);
+
+G_END_DECLS
 
 #endif /* CLAYLAND_H */
