@@ -238,7 +238,7 @@ _clayland_add_devices(ClaylandCompositor *compositor)
 	}
 
 	compositor->event_handler_id =
-	    g_signal_connect_object (compositor->stage, "captured-event",
+	    g_signal_connect_object (compositor->container, "captured-event",
 			  G_CALLBACK (event_cb),
 			  compositor, 0);
 }

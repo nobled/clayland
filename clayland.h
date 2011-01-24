@@ -19,7 +19,7 @@ typedef struct _ClaylandCompositorClass ClaylandCompositorClass;
 
 GType clayland_compositor_get_type(void);
 
-ClaylandCompositor *clayland_compositor_create(ClutterActor *stage);
+ClaylandCompositor *clayland_compositor_create(ClutterContainer *container);
 
 G_END_DECLS
 

@@ -48,7 +48,7 @@ main (int argc, char *argv[])
 	/* Show everying */
 	clutter_actor_show (stage);
 
-	compositor = clayland_compositor_create(stage);
+	compositor = clayland_compositor_create(CLUTTER_CONTAINER(stage));
 	if (!compositor)
 		return EXIT_FAILURE;
 

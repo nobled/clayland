@@ -23,12 +23,12 @@ clayland_compositor_finalize (GObject *object)
 		g_source_destroy(compositor->source);
 		g_source_unref(compositor->source);
 	}
-	if (g_signal_handler_is_connected(compositor->stage,
+	if (g_signal_handler_is_connected(compositor->container,
 		            compositor->event_handler_id))
-		g_signal_handler_disconnect(compositor->stage,
+		g_signal_handler_disconnect(compositor->container,
 		                compositor->event_handler_id);
-	if (!clutter_stage_is_default(CLUTTER_STAGE(compositor->stage)))
-		g_object_unref(compositor->stage);
+	if (!clutter_stage_is_default(CLUTTER_STAGE(compositor->container)))
+		g_object_unref(compositor->container);
 	if (compositor->display != NULL)
 		wl_display_destroy (compositor->display);
 	if (compositor->drm_fd >= 0)
@@ -56,7 +56,7 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 	compositor->display = NULL;
 	compositor->source = NULL;
 	compositor->event_handler_id = 0;
-	compositor->stage = NULL;
+	compositor->container = NULL;
 	compositor->drm_path = NULL;
 	compositor->drm_fd = -1;
 }
@@ -83,7 +83,7 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 {
 	ClaylandSurface *surface =
 		container_of(resource, ClaylandSurface, surface.resource);
-	ClutterActor *stage = surface->compositor->stage;
+	ClutterActor *container = surface->compositor->container;
 	struct wl_listener *l, *next;
 	uint32_t time;
 
@@ -95,7 +95,7 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 			      &surface->surface.destroy_listener_list, link)
 		l->func(l, &surface->surface, time);
 
-	clutter_container_remove_actor (CLUTTER_CONTAINER (stage),
+	clutter_container_remove_actor (CLUTTER_CONTAINER (container),
 					CLUTTER_ACTOR (surface));
 	g_object_unref(surface);
 }
@@ -111,7 +111,7 @@ compositor_create_surface(struct wl_client *client,
 	surface = g_object_new (clayland_surface_get_type(), NULL);
 
 	surface->compositor = g_object_ref (clayland);
-	clutter_container_add_actor(CLUTTER_CONTAINER (clayland->stage),
+	clutter_container_add_actor(CLUTTER_CONTAINER (clayland->container),
 				    CLUTTER_ACTOR (surface));
 
 	wl_list_init(&surface->surface.destroy_listener_list);
@@ -135,18 +135,19 @@ const static struct wl_compositor_interface compositor_interface = {
 };
 
 ClaylandCompositor *
-clayland_compositor_create(ClutterActor *stage)
+clayland_compositor_create(ClutterContainer *container)
 {
 	ClaylandCompositor *compositor;
 
-	g_return_val_if_fail(CLUTTER_IS_STAGE(stage), NULL);
+	g_return_val_if_fail(CLUTTER_IS_CONTAINER(container)
+	                    && CLUTTER_IS_ACTOR(container), NULL);
 
 	compositor = g_object_new (clayland_compositor_get_type(), NULL);
 
-	if (!clutter_stage_is_default(CLUTTER_STAGE(stage)))
-		compositor->stage = g_object_ref_sink(stage);
+	if (!clutter_stage_is_default(CLUTTER_STAGE(container)))
+		compositor->container = g_object_ref_sink(container);
 	else
-		compositor->stage = stage;
+		compositor->container = CLUTTER_ACTOR(container);
 
 	compositor->display = wl_display_create();
 	if (compositor->display == NULL) {
