@@ -1,6 +1,4 @@
 
-#include <stdlib.h>
-
 #include "clayland-private.h"
 
 typedef struct _ClaylandMoveGrab {
@@ -30,7 +28,7 @@ move_grab_button(struct wl_grab *grab,
 static void
 move_grab_end(struct wl_grab *grab, uint32_t time)
 {
-	free(grab);
+	g_free(grab);
 }
 
 static const struct wl_grab_interface move_grab_interface = {
@@ -48,7 +46,7 @@ shell_move(struct wl_client *client, struct wl_shell *shell,
 	ClaylandMoveGrab *move;
 	gfloat x, y;
 
-	move = malloc(sizeof *move);
+	move = g_malloc(sizeof *move);
 	if (!move) {
 		wl_client_post_no_memory(client);
 		return;
@@ -113,7 +111,7 @@ resize_grab_button(struct wl_grab *grab,
 static void
 resize_grab_end(struct wl_grab *grab, uint32_t time)
 {
-	free(grab);
+	g_free(grab);
 }
 
 static const struct wl_grab_interface resize_grab_interface = {
@@ -131,7 +129,7 @@ shell_resize(struct wl_client *client, struct wl_shell *shell,
 	ClaylandSurface *cs = container_of(surface, ClaylandSurface, surface);
 	gfloat x, y, width, height;
 
-	resize = malloc(sizeof *resize);
+	resize = g_malloc(sizeof *resize);
 	if (!resize) {
 		wl_client_post_no_memory(client);
 		return;
