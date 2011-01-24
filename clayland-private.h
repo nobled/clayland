@@ -44,6 +44,7 @@ GSource *wl_glib_source_new(struct wl_event_loop *loop);
 int dri2_connect(ClaylandCompositor *compositor);
 int dri2_authenticate(ClaylandCompositor *compositor, uint32_t magic);
 
+extern const struct wl_surface_interface clayland_surface_interface;
 extern const struct wl_drm_interface clayland_drm_interface;
 extern const struct wl_shm_interface clayland_shm_interface;
 
