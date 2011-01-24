@@ -9,6 +9,7 @@ clayland_SOURCES =				\
 	clayland.h				\
 	clayland-private.h			\
 	clayland.c				\
+	clayland-buffer.c			\
 	clayland-drm.c				\
 	clayland-shm.c				\
 	example.c				\
