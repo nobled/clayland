@@ -13,6 +13,7 @@ clayland_SOURCES =				\
 	clayland-drm.c				\
 	clayland-shm.c				\
 	clayland-surface.c			\
+	shell.c					\
 	example.c				\
 	wayland-source.c			\
 	dri2.c

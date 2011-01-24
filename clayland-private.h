@@ -47,6 +47,7 @@ int dri2_authenticate(ClaylandCompositor *compositor, uint32_t magic);
 extern const struct wl_surface_interface clayland_surface_interface;
 extern const struct wl_drm_interface clayland_drm_interface;
 extern const struct wl_shm_interface clayland_shm_interface;
+extern const struct wl_shell_interface clayland_shell_interface;
 
 CoglPixelFormat
 _clayland_init_buffer(ClaylandBuffer *cbuffer,
