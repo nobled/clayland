@@ -51,6 +51,8 @@ extern const struct wl_shell_interface clayland_shell_interface;
 
 void
 _clayland_add_devices(ClaylandCompositor *compositor);
+void
+_clayland_add_buffer_interfaces(ClaylandCompositor *compositor);
 
 CoglPixelFormat
 _clayland_init_buffer(ClaylandBuffer *cbuffer,

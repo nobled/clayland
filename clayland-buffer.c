@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #include "clayland-private.h"
 
 G_DEFINE_TYPE (ClaylandBuffer, clayland_buffer, G_TYPE_OBJECT);
@@ -104,5 +106,88 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 
 	/* unknown visual. */
 	return COGL_PIXEL_FORMAT_ANY;
+}
+
+
+static gboolean
+has_egl_extension(EGLDisplay dpy, size_t target_len, const char *target)
+{
+	const char *extensions, *ext, *next;
+	size_t len;
+
+	extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+	ext = extensions;
+	while (ext) {
+		next = strchr(ext, ' ');
+		if (next) {
+			len = (size_t)(next - ext);
+			next++; /* point to the next extension string */
+			if (len != target_len)
+				goto no_match;
+		} else {
+		/* if 'ext' is the last extension string,
+		   include the target's null terminator in the comparison */
+			len = target_len+1;
+		}
+
+		if (strncmp(target, ext, len) == 0)
+			break;
+no_match:
+		ext = next;
+	};
+
+	return ext != NULL;
+}
+
+static void
+post_drm_device(struct wl_client *client, struct wl_object *global)
+{
+	ClaylandCompositor *compositor =
+	    container_of(global, ClaylandCompositor, drm_object);
+
+	g_debug("Advertising DRM device: %s", compositor->drm_path);
+
+	wl_client_post_event(client, global, WL_DRM_DEVICE,
+	                     compositor->drm_path);
+}
+
+void
+_clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
+{
+	compositor->shm_object.interface = &wl_shm_interface;
+	compositor->shm_object.implementation =
+	    (void (**)(void)) &clayland_shm_interface;
+	wl_display_add_object(compositor->display, &compositor->shm_object);
+	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
+
+	if (!compositor->drm_path) {
+		g_warning("DRI2 connect failed, disabling DRM buffers");
+		return;
+	}
+
+	if (!has_egl_extension(compositor->egl_display,
+	                       18, "EGL_MESA_drm_image"))
+		return;
+
+	compositor->create_image =
+	    (PFNEGLCREATEIMAGEKHRPROC)
+	        eglGetProcAddress("eglCreateImageKHR");
+	compositor->destroy_image =
+	    (PFNEGLDESTROYIMAGEKHRPROC)
+	        eglGetProcAddress("eglDestroyImageKHR");
+	compositor->image2tex =
+	    (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)
+	        eglGetProcAddress("glEGLImageTargetTexture2DOES");
+
+	if (!(compositor->create_image) || !(compositor->destroy_image)
+	    || !(compositor->image2tex))
+		return;
+
+	compositor->drm_object.interface = &wl_drm_interface;
+	compositor->drm_object.implementation =
+	    (void (**)(void)) &clayland_drm_interface;
+	wl_display_add_object(compositor->display, &compositor->drm_object);
+	wl_display_add_global(compositor->display, &compositor->drm_object,
+	                      post_drm_device);
 }
 
