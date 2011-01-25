@@ -1,12 +1,14 @@
+lib_LTLIBRARIES = libclayland.la
 noinst_PROGRAMS = clayland
 
-AM_CPPFLAGS = $(CLAYLAND_CFLAGS)
+include_HEADERS =				\
+	clayland.h
 
-clayland_LDADD =				\
-	$(CLAYLAND_LIBS)
+libclayland_la_CFLAGS = $(CLAYLAND_CFLAGS)
 
-clayland_SOURCES =				\
-	clayland.h				\
+libclayland_la_LIBADD = $(CLAYLAND_LIBS)
+
+libclayland_la_SOURCES =			\
 	clayland-private.h			\
 	clayland.c				\
 	clayland-buffer.c			\
@@ -15,8 +17,16 @@ clayland_SOURCES =				\
 	clayland-surface.c			\
 	input.c					\
 	shell.c					\
-	example.c				\
 	wayland-source.c			\
 	dri2.c
+
+
+clayland_CFLAGS = $(EXAMPLE_CFLAGS)
+
+clayland_LDADD =				\
+	$(top_builddir)/libclayland.la		\
+	$(EXAMPLE_LIBS)
+
+clayland_SOURCES = example.c
 
 ACLOCAL_AMFLAGS = -I m4
