@@ -1,6 +1,6 @@
 noinst_PROGRAMS = clayland
 
-INCLUDES = $(CLAYLAND_CFLAGS)
+AM_CPPFLAGS = $(CLAYLAND_CFLAGS)
 
 clayland_LDADD =				\
 	$(CLAYLAND_LIBS)
