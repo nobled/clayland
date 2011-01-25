@@ -65,6 +65,8 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 					   "clayland");
 		device = &clayland_device->input_device;
 	}
+	else
+		device = NULL;
 
 	if (CLAYLAND_IS_SURFACE (event->any.source))
 		cs = CLAYLAND_SURFACE (event->any.source);
@@ -83,6 +85,8 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 
 	case CLUTTER_KEY_PRESS:
 	case CLUTTER_KEY_RELEASE:
+		g_assert(device != NULL);
+
 		state = event->type == CLUTTER_KEY_PRESS ? 1 : 0;
 
 		if (device->keyboard_focus == NULL)
@@ -96,6 +100,8 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 		return TRUE;
 
 	case CLUTTER_MOTION:
+		g_assert(device != NULL);
+
 		device->x = event->motion.x;
 		device->y = event->motion.y;
 
@@ -146,6 +152,8 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 
 	case CLUTTER_BUTTON_PRESS:
 	case CLUTTER_BUTTON_RELEASE:
+		g_assert(device != NULL);
+
 		/* Not a clayland surface, let clutter deliver the event. */
 		if (cs == NULL)
 			return FALSE;
