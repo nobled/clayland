@@ -10,6 +10,9 @@ clayland_buffer_finalize (GObject *object)
 {
 	ClaylandBuffer *cbuffer = CLAYLAND_BUFFER(object);
 
+	g_debug("finalizing buffer %p of type '%s'", object,
+	        G_OBJECT_TYPE_NAME(object));
+
 	if (cbuffer->tex_handle != COGL_INVALID_HANDLE)
 		cogl_handle_unref(cbuffer->tex_handle);
 	G_OBJECT_CLASS (clayland_buffer_parent_class)->finalize (object);
@@ -26,6 +29,8 @@ clayland_buffer_class_init (ClaylandBufferClass *klass)
 static void
 clayland_buffer_init (ClaylandBuffer *buffer)
 {
+	g_debug("initializing buffer %p of type '%s'", buffer,
+	        G_OBJECT_TYPE_NAME(buffer));
 	buffer->tex_handle = COGL_INVALID_HANDLE;
 }
 
@@ -57,6 +62,9 @@ resource_destroy_buffer(struct wl_resource *resource, struct wl_client *client)
 {
 	ClaylandBuffer *buffer =
 		container_of(resource, ClaylandBuffer, buffer.resource);
+
+	g_debug("destroying buffer %p of type '%s'", buffer,
+	        G_OBJECT_TYPE_NAME(buffer));
 
 	/* Note: Any number of surfaces might still hold a reference to this buffer.
 	   See the _finalize methods for ClaylandBuffer (above) and its subclasses
