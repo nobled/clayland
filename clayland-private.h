@@ -39,28 +39,37 @@ typedef struct _ClaylandSurfaceClass ClaylandSurfaceClass;
 typedef struct _ClaylandBuffer ClaylandBuffer;
 typedef struct _ClaylandBufferClass ClaylandBufferClass;
 
+G_GNUC_INTERNAL
 GSource *wl_glib_source_new(struct wl_event_loop *loop);
 
+G_GNUC_INTERNAL
 int dri2_connect(ClaylandCompositor *compositor);
+G_GNUC_INTERNAL
 int dri2_authenticate(ClaylandCompositor *compositor, uint32_t magic);
 
+G_GNUC_INTERNAL
 extern const struct wl_surface_interface clayland_surface_interface;
+G_GNUC_INTERNAL
 extern const struct wl_drm_interface clayland_drm_interface;
+G_GNUC_INTERNAL
 extern const struct wl_shm_interface clayland_shm_interface;
+G_GNUC_INTERNAL
 extern const struct wl_shell_interface clayland_shell_interface;
 
-void
+G_GNUC_INTERNAL void
 _clayland_add_devices(ClaylandCompositor *compositor);
-void
+G_GNUC_INTERNAL void
 _clayland_add_buffer_interfaces(ClaylandCompositor *compositor);
 
-CoglPixelFormat
+G_GNUC_INTERNAL CoglPixelFormat
 _clayland_init_buffer(ClaylandBuffer *cbuffer,
                       ClaylandCompositor *compositor,
                       uint32_t id, int32_t width, int32_t height,
                       struct wl_visual *visual);
 
+G_GNUC_INTERNAL
 GType clayland_surface_get_type(void);
+G_GNUC_INTERNAL
 GType clayland_buffer_get_type(void);
 
 struct _ClaylandCompositor {
