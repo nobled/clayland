@@ -17,8 +17,16 @@ G_BEGIN_DECLS
 typedef struct _ClaylandCompositor ClaylandCompositor;
 typedef struct _ClaylandCompositorClass ClaylandCompositorClass;
 
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define CLAYLAND_EXPORT __attribute__((__visibility__("default")))
+#else
+#define CLAYLAND_EXPORT
+#endif
+
+CLAYLAND_EXPORT
 GType clayland_compositor_get_type(void);
 
+CLAYLAND_EXPORT
 ClaylandCompositor *clayland_compositor_create(ClutterContainer *container);
 
 G_END_DECLS
