@@ -4,7 +4,9 @@ noinst_PROGRAMS = clayland
 include_HEADERS =				\
 	clayland.h
 
-libclayland_la_CFLAGS = $(CLAYLAND_CFLAGS)
+libclayland_la_CFLAGS =				\
+	$(CLAYLAND_CFLAGS)			\
+	$(GCC_CFLAGS)
 
 libclayland_la_LIBADD = $(CLAYLAND_LIBS)
 
