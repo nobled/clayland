@@ -1,7 +1,7 @@
 AC_INIT(clayland, 0.1)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AC_PROG_CC
-AC_PROG_LIBTOOL
+LT_INIT
 
 AC_CONFIG_HEADERS([clayland-config.h])
 AC_CONFIG_MACRO_DIR([m4])
