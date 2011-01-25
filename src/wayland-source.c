@@ -1,3 +1,4 @@
+#include <clutter/clutter.h>
 #include <glib.h>
 #include <wayland-server.h>
 
