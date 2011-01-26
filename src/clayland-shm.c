@@ -83,6 +83,7 @@ shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 	                    PROT_READ, MAP_SHARED, fd, 0);
 	(void) close(fd);
 	if (buffer->data == MAP_FAILED) {
+		g_debug("buffer %p: mmap() failed", buffer);
 		g_object_unref(buffer);
 		return;
 	}
@@ -92,6 +93,7 @@ shm_buffer_create(struct wl_client *client, struct wl_shm *shm,
 	                flags, pformat, COGL_PIXEL_FORMAT_ANY, stride, buffer->data);
 
 	if (buffer->cbuffer.tex_handle == COGL_INVALID_HANDLE) {
+		g_debug("buffer %p: failed to create CoglHandle", buffer);
 		g_object_unref(buffer);
 		return;
 	}

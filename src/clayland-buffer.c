@@ -98,6 +98,21 @@ enum_from_visual(ClaylandCompositor *compositor, struct wl_visual *visual)
 
 }
 
+static const gchar *
+str_from_visual(enum visual evisual)
+{
+switch (evisual) {
+	case VISUAL_ARGB_PRE:
+		return "premultiplied ARGB";
+	case VISUAL_ARGB:
+		return "ARGB";
+	case VISUAL_RGB:
+		return "RGB";
+	default:
+		return "<unknown visual>";
+	}
+}
+
 static CoglPixelFormat
 format_from_visual(enum visual evisual)
 {
@@ -148,6 +163,10 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 		&default_buffer_interface;
 
 	evisual = enum_from_visual(compositor, visual);
+
+	g_debug("creating buffer %p (id=%u, width=%d, height=%d,"
+	        " visual='%s')", cbuffer, id, width, height,
+	        str_from_visual(evisual));
 
 	return format_from_visual(evisual);
 }

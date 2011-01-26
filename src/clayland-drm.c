@@ -94,7 +94,7 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 	                          EGL_DRM_BUFFER_MESA,
 	                          (EGLClientBuffer)name, attribs);
 	if (image == EGL_NO_IMAGE_KHR) {
-		g_warning("failed to create EGLImage");
+		g_warning("buffer %p: failed to create EGLImage", buffer);
 		/* XXX: report error? */
 		g_object_unref(buffer);
 		return;
@@ -110,7 +110,7 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 	                (GLuint)width, (GLuint)height, 0, 0, pformat);
 
 	if (buffer->cbuffer.tex_handle == COGL_INVALID_HANDLE) {
-		g_warning("failed to create CoglHandle");
+		g_warning("buffer %p: failed to create CoglHandle", buffer);
 		g_object_unref(buffer);
 		return;
 	}
