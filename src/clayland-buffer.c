@@ -83,6 +83,29 @@ static const struct wl_buffer_interface default_buffer_interface = {
 	client_destroy_buffer
 };
 
+static CoglPixelFormat
+format_from_visual(ClaylandCompositor *compositor, struct wl_visual *visual)
+{
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+	if (visual == &compositor->compositor.premultiplied_argb_visual)
+		return COGL_PIXEL_FORMAT_ARGB_8888_PRE;
+	if (visual == &compositor->compositor.argb_visual)
+		return COGL_PIXEL_FORMAT_ARGB_8888;
+	if (visual == &compositor->compositor.rgb_visual)
+		return COGL_PIXEL_FORMAT_RGB_888;
+#elif G_BYTE_ORDER == G_LITTLE_ENDIAN
+	if (visual == &compositor->compositor.premultiplied_argb_visual)
+		return COGL_PIXEL_FORMAT_BGRA_8888_PRE;
+	if (visual == &compositor->compositor.argb_visual)
+		return COGL_PIXEL_FORMAT_BGRA_8888;
+	if (visual == &compositor->compositor.rgb_visual)
+		return COGL_PIXEL_FORMAT_BGR_888;
+#endif
+	/* unknown visual. */
+	return COGL_PIXEL_FORMAT_ANY;
+
+}
+
 CoglPixelFormat
 _clayland_init_buffer(ClaylandBuffer *cbuffer,
                       ClaylandCompositor *compositor,
@@ -105,15 +128,7 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 	cbuffer->buffer.resource.object.implementation = (void (**)(void))
 		&default_buffer_interface;
 
-	if (visual == &compositor->compositor.premultiplied_argb_visual)
-		return COGL_PIXEL_FORMAT_BGRA_8888_PRE;
-	if (visual == &compositor->compositor.argb_visual)
-		return COGL_PIXEL_FORMAT_BGRA_8888;
-	if (visual == &compositor->compositor.rgb_visual)
-		return COGL_PIXEL_FORMAT_BGR_888;
-
-	/* unknown visual. */
-	return COGL_PIXEL_FORMAT_ANY;
+	return format_from_visual(compositor, visual);
 }
 
 
