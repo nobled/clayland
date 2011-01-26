@@ -83,27 +83,44 @@ static const struct wl_buffer_interface default_buffer_interface = {
 	client_destroy_buffer
 };
 
-static CoglPixelFormat
-format_from_visual(ClaylandCompositor *compositor, struct wl_visual *visual)
+static enum visual
+enum_from_visual(ClaylandCompositor *compositor, struct wl_visual *visual)
 {
-#if G_BYTE_ORDER == G_BIG_ENDIAN
 	if (visual == &compositor->compositor.premultiplied_argb_visual)
-		return COGL_PIXEL_FORMAT_ARGB_8888_PRE;
+		return VISUAL_ARGB_PRE;
 	if (visual == &compositor->compositor.argb_visual)
-		return COGL_PIXEL_FORMAT_ARGB_8888;
+		return VISUAL_ARGB;
 	if (visual == &compositor->compositor.rgb_visual)
+		return VISUAL_RGB;
+
+	/* unknown visual. */
+	return VISUAL_UNKNOWN;
+
+}
+
+static CoglPixelFormat
+format_from_visual(enum visual evisual)
+{
+switch (evisual) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+	case VISUAL_ARGB_PRE:
+		return COGL_PIXEL_FORMAT_ARGB_8888_PRE;
+	case VISUAL_ARGB:
+		return COGL_PIXEL_FORMAT_ARGB_8888;
+	case VISUAL_RGB:
 		return COGL_PIXEL_FORMAT_RGB_888;
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
-	if (visual == &compositor->compositor.premultiplied_argb_visual)
+	case VISUAL_ARGB_PRE:
 		return COGL_PIXEL_FORMAT_BGRA_8888_PRE;
-	if (visual == &compositor->compositor.argb_visual)
+	case VISUAL_ARGB:
 		return COGL_PIXEL_FORMAT_BGRA_8888;
-	if (visual == &compositor->compositor.rgb_visual)
+	case VISUAL_RGB:
 		return COGL_PIXEL_FORMAT_BGR_888;
 #endif
-	/* unknown visual. */
-	return COGL_PIXEL_FORMAT_ANY;
-
+	default:
+		/* unknown visual. */
+		return COGL_PIXEL_FORMAT_ANY;
+	}
 }
 
 CoglPixelFormat
@@ -112,6 +129,8 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
                       uint32_t id, int32_t width, int32_t height,
                       struct wl_visual *visual)
 {
+	enum visual evisual;
+
 	g_return_val_if_fail(width >= 0 && height >= 0,
 	                     COGL_PIXEL_FORMAT_ANY);
 
@@ -128,7 +147,9 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 	cbuffer->buffer.resource.object.implementation = (void (**)(void))
 		&default_buffer_interface;
 
-	return format_from_visual(compositor, visual);
+	evisual = enum_from_visual(compositor, visual);
+
+	return format_from_visual(evisual);
 }
 
 

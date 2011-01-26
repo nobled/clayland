@@ -39,6 +39,13 @@ typedef struct _ClaylandSurfaceClass ClaylandSurfaceClass;
 typedef struct _ClaylandBuffer ClaylandBuffer;
 typedef struct _ClaylandBufferClass ClaylandBufferClass;
 
+enum visual {
+VISUAL_UNKNOWN,
+VISUAL_ARGB_PRE,
+VISUAL_ARGB,
+VISUAL_RGB
+};
+
 G_GNUC_INTERNAL
 GSource *wl_glib_source_new(struct wl_event_loop *loop);
 
