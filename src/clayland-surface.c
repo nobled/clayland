@@ -82,9 +82,14 @@ surface_attach(struct wl_client *client,
 
 	buffer->attach(buffer, surface); /* XXX: does nothing right now */
 
-	if (csurface->buffer != NULL)
+	if (csurface->buffer != NULL) {
+		g_debug("detaching buffer %p from surface %p",
+		        csurface->buffer, csurface);
 		g_object_unref(csurface->buffer);
+	}
 	csurface->buffer = g_object_ref(cbuffer);
+
+	g_debug("attaching buffer %p to surface %p", cbuffer, csurface);
 }
 
 static void
