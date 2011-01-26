@@ -73,17 +73,18 @@ surface_attach(struct wl_client *client,
 
 	clutter_actor_get_position (CLUTTER_ACTOR (csurface), &x, &y);
 
+	clutter_texture_set_cogl_texture(&csurface->texture,
+	                                 cbuffer->tex_handle);
+	clutter_actor_set_position (CLUTTER_ACTOR(csurface),
+				    x + dx, y + dy);
+	clutter_actor_set_size (CLUTTER_ACTOR(csurface),
+	                        buffer->width, buffer->height);
+
+	buffer->attach(buffer, surface); /* XXX: does nothing right now */
+
 	if (csurface->buffer != NULL)
 		g_object_unref(csurface->buffer);
 	csurface->buffer = g_object_ref(cbuffer);
-
-	buffer->attach(buffer, surface); /* XXX: does nothing right now */
-	clutter_texture_set_cogl_texture(&csurface->texture,
-	                                 cbuffer->tex_handle);
-	clutter_actor_set_position (CLUTTER_ACTOR(&csurface->texture),
-				    x + dx, y + dy);
-	clutter_actor_set_size (CLUTTER_ACTOR(&csurface->texture),
-	                        buffer->width, buffer->height);
 }
 
 static void
