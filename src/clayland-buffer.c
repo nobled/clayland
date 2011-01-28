@@ -164,7 +164,8 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 
 	evisual = enum_from_visual(compositor, visual);
 
-	g_debug("creating buffer %p (id=%u, width=%d, height=%d,"
+	if (0)
+	  g_debug("creating buffer %p (id=%u, width=%d, height=%d,"
 	        " visual='%s')", cbuffer, id, width, height,
 	        str_from_visual(evisual));
 
