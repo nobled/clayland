@@ -47,8 +47,6 @@ clayland_surface_class_init (ClaylandSurfaceClass *klass)
 static void
 clayland_surface_init (ClaylandSurface *surface)
 {
-	g_debug("initializing surface %p of type '%s'", surface,
-	        G_OBJECT_TYPE_NAME(surface));
 	surface->buffer = NULL;
 	surface->compositor = NULL;
 }

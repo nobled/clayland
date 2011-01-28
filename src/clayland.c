@@ -50,9 +50,6 @@ clayland_compositor_class_init (ClaylandCompositorClass *klass)
 static void
 clayland_compositor_init (ClaylandCompositor *compositor)
 {
-	g_debug("initializing compositor %p of type '%s'", compositor,
-	        G_OBJECT_TYPE_NAME(compositor));
-
 	compositor->display = NULL;
 	compositor->source = NULL;
 	compositor->event_handler_id = 0;
@@ -110,6 +107,9 @@ compositor_create_surface(struct wl_client *client,
 
 	surface = g_object_new (clayland_surface_get_type(), NULL);
 
+	g_debug("creating surface %p of type '%s'", surface,
+	        G_OBJECT_TYPE_NAME(surface));
+
 	surface->compositor = g_object_ref (clayland);
 	clutter_container_add_actor(CLUTTER_CONTAINER (clayland->container),
 				    CLUTTER_ACTOR (surface));
@@ -143,6 +143,9 @@ clayland_compositor_create(ClutterContainer *container)
 	                    && CLUTTER_IS_ACTOR(container), NULL);
 
 	compositor = g_object_new (clayland_compositor_get_type(), NULL);
+
+	g_debug("creating compositor %p of type '%s'", compositor,
+	        G_OBJECT_TYPE_NAME(compositor));
 
 	if (!clutter_stage_is_default(CLUTTER_STAGE(container)))
 		compositor->container = g_object_ref_sink(container);

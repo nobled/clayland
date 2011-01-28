@@ -29,8 +29,6 @@ clayland_buffer_class_init (ClaylandBufferClass *klass)
 static void
 clayland_buffer_init (ClaylandBuffer *buffer)
 {
-	g_debug("initializing buffer %p of type '%s'", buffer,
-	        G_OBJECT_TYPE_NAME(buffer));
 	buffer->tex_handle = COGL_INVALID_HANDLE;
 }
 
@@ -148,6 +146,9 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 
 	g_return_val_if_fail(width >= 0 && height >= 0,
 	                     COGL_PIXEL_FORMAT_ANY);
+
+	g_debug("creating buffer %p of type '%s'", cbuffer,
+	        G_OBJECT_TYPE_NAME(cbuffer));
 
 	cbuffer->buffer.compositor = &compositor->compositor;
 	cbuffer->buffer.width = width;
