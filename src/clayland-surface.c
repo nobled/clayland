@@ -49,7 +49,10 @@ clayland_surface_init (ClaylandSurface *surface)
 {
 	surface->buffer = NULL;
 	surface->compositor = NULL;
-	surface->fullscreen = FALSE;
+	surface->constraints.x = NULL;
+	surface->constraints.y = NULL;
+	surface->constraints.w = NULL;
+	surface->constraints.h = NULL;
 }
 
 static void
@@ -91,6 +94,25 @@ surface_attach(struct wl_client *client,
 	g_debug("attaching buffer %p to surface %p", cbuffer, csurface);
 }
 
+static inline void
+remove_constraint(ClutterActor *cs, ClutterConstraint **c)
+{
+	if (*c == NULL)
+		return;
+	clutter_actor_remove_constraint(cs, *c);
+	g_object_unref(*c);
+	*c = NULL;
+}
+
+static inline void
+remove_constraints(ClaylandSurface *cs)
+{
+	remove_constraint(CLUTTER_ACTOR(cs), &cs->constraints.x);
+	remove_constraint(CLUTTER_ACTOR(cs), &cs->constraints.y);
+	remove_constraint(CLUTTER_ACTOR(cs), &cs->constraints.w);
+	remove_constraint(CLUTTER_ACTOR(cs), &cs->constraints.h);
+}
+
 static void
 surface_map_toplevel(struct wl_client *client,
 	    struct wl_surface *surface)
@@ -98,13 +120,7 @@ surface_map_toplevel(struct wl_client *client,
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
 
-	if (csurface->fullscreen) {
-		clutter_actor_set_size(CLUTTER_ACTOR(csurface),
-			csurface->width, csurface->height);
-		clutter_actor_set_position(CLUTTER_ACTOR(csurface),
-			csurface->x, csurface->y);
-		csurface->fullscreen = FALSE;
-	}
+	remove_constraints(csurface);
 
 	clutter_actor_show (CLUTTER_ACTOR(csurface));
 	clutter_actor_set_reactive (CLUTTER_ACTOR (csurface), TRUE);
@@ -119,17 +135,32 @@ surface_map_transient(struct wl_client *client,
 		container_of(surface, ClaylandSurface, surface);
 	ClaylandSurface *cparent =
 		container_of(parent, ClaylandSurface, surface);
-	gfloat x, y;
+	ClutterConstraint *x, *y;
 
-	if (csurface->fullscreen) {
-		clutter_actor_set_size(CLUTTER_ACTOR(csurface),
-			csurface->width, csurface->height);
-		csurface->fullscreen = FALSE;
+	if (SURFACE_IS_TRANSIENT(csurface) &&
+	   (SURFACE_GET_TRANSIENT_PARENT(csurface) == CLUTTER_ACTOR(cparent)))
+		return;
+
+	remove_constraints(csurface);
+
+	x = clutter_bind_constraint_new(CLUTTER_ACTOR(cparent),
+	                                CLUTTER_BIND_X, (gfloat)dx);
+	y = clutter_bind_constraint_new(CLUTTER_ACTOR(cparent),
+	                                CLUTTER_BIND_Y, (gfloat)dy);
+
+	if (x == NULL || y == NULL) {
+		wl_client_post_no_memory(client);
+		g_warning("surface.map_transient failed:"
+		          " Could not create constraints");
+		g_object_unref(x);
+		g_object_unref(y);
+		return;
 	}
+	csurface->constraints.x = g_object_ref(x);
+	csurface->constraints.y = g_object_ref(y);
 
-	clutter_actor_get_position (CLUTTER_ACTOR (cparent), &x, &y);
-	clutter_actor_set_position (CLUTTER_ACTOR (csurface),
-				    x + dx, y + dy);
+	clutter_actor_add_constraint(CLUTTER_ACTOR(csurface), x);
+	clutter_actor_add_constraint(CLUTTER_ACTOR(csurface), y);
 
 	clutter_actor_show (CLUTTER_ACTOR (csurface));
 	clutter_actor_set_reactive (CLUTTER_ACTOR (csurface), TRUE);
@@ -142,24 +173,42 @@ surface_map_fullscreen(struct wl_client *client,
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
 	ClutterActor *container = csurface->compositor->container;
-	gfloat width, height, x, y;
+	ClutterConstraint *x, *y, *w, *h;
 
-	if (csurface->fullscreen)
+	if (SURFACE_IS_FULLSCREEN(csurface))
 		return;
-	csurface->fullscreen = TRUE;
+	remove_constraints(csurface);
 
-	clutter_actor_get_size(CLUTTER_ACTOR(csurface), &width, &height);
-	clutter_actor_get_position(CLUTTER_ACTOR(csurface), &x, &y);
-	csurface->width = width;
-	csurface->height = height;
-	csurface->x = x;
-	csurface->y = y;
+	/* XXX: This only works if the container uses a fixed
+	        ClutterLayoutManager, like ClutterBox or ClutterStage do */
+	x = clutter_bind_constraint_new(CLUTTER_ACTOR(container),
+	                                CLUTTER_BIND_X, 0.0);
+	y = clutter_bind_constraint_new(CLUTTER_ACTOR(container),
+	                                CLUTTER_BIND_Y, 0.0);
+	w = clutter_bind_constraint_new(CLUTTER_ACTOR(container),
+	                                CLUTTER_BIND_WIDTH, 0.0);
+	h = clutter_bind_constraint_new(CLUTTER_ACTOR(container),
+	                                CLUTTER_BIND_HEIGHT, 0.0);
 
-	/* XXX: The container might change size...
-	        Is there a Clutter API for mapping one actor to cover another? */
-	clutter_actor_get_size(container, &width, &height);
-	clutter_actor_set_size(CLUTTER_ACTOR(csurface), width, height);
-	clutter_actor_set_position(CLUTTER_ACTOR(csurface), 0.0, 0.0);
+	if (x == NULL || y == NULL || w == NULL || h == NULL) {
+		wl_client_post_no_memory(client);
+		g_warning("surface.map_fullscreen failed:"
+		          " Could not create constraints");
+		g_object_unref(x);
+		g_object_unref(y);
+		g_object_unref(w);
+		g_object_unref(h);
+		return;
+	}
+	csurface->constraints.x = g_object_ref(x);
+	csurface->constraints.y = g_object_ref(y);
+	csurface->constraints.w = g_object_ref(w);
+	csurface->constraints.h = g_object_ref(h);
+
+	clutter_actor_add_constraint(CLUTTER_ACTOR(csurface), x);
+	clutter_actor_add_constraint(CLUTTER_ACTOR(csurface), y);
+	clutter_actor_add_constraint(CLUTTER_ACTOR(csurface), w);
+	clutter_actor_add_constraint(CLUTTER_ACTOR(csurface), h);
 
 	clutter_actor_show (CLUTTER_ACTOR(csurface));
 	clutter_actor_set_reactive (CLUTTER_ACTOR (csurface), TRUE);

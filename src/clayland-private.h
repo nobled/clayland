@@ -109,14 +109,28 @@ struct _ClaylandCompositorClass {
 	GObjectClass		 object_class;
 };
 
+struct constraints {
+	ClutterConstraint *x, *y, *w, *h;
+};
+
+#define SURFACE_IS_FULLSCREEN(cs) \
+	((cs)->constraints.w != NULL)
+
+#define SURFACE_IS_TRANSIENT(cs) \
+	((!SURFACE_IS_FULLSCREEN(cs)) && \
+	((cs)->constraints.x != NULL))
+
+#define SURFACE_GET_TRANSIENT_PARENT(cs) \
+	(SURFACE_IS_TRANSIENT(cs) ? \
+	clutter_bind_constraint_get_source( \
+	 CLUTTER_BIND_CONSTRAINT((cs)->constraints.x)) : NULL)
 
 struct _ClaylandSurface {
 	ClutterTexture		 texture;
 	struct wl_surface	 surface;
 	ClaylandBuffer		*buffer;
 	ClaylandCompositor	*compositor;
-	gboolean fullscreen;
-	gfloat width, height, x, y;
+	struct constraints	 constraints;
 };
 
 struct _ClaylandSurfaceClass {
