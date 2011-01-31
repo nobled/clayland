@@ -49,6 +49,7 @@ clayland_surface_init (ClaylandSurface *surface)
 {
 	surface->buffer = NULL;
 	surface->compositor = NULL;
+	surface->fullscreen = FALSE;
 }
 
 static void
@@ -97,8 +98,16 @@ surface_map_toplevel(struct wl_client *client,
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
 
-	clutter_actor_show (CLUTTER_ACTOR(&csurface->texture));
-	clutter_actor_set_reactive (CLUTTER_ACTOR (&csurface->texture), TRUE);
+	if (csurface->fullscreen) {
+		clutter_actor_set_size(CLUTTER_ACTOR(csurface),
+			csurface->width, csurface->height);
+		clutter_actor_set_position(CLUTTER_ACTOR(csurface),
+			csurface->x, csurface->y);
+		csurface->fullscreen = FALSE;
+	}
+
+	clutter_actor_show (CLUTTER_ACTOR(csurface));
+	clutter_actor_set_reactive (CLUTTER_ACTOR (csurface), TRUE);
 }
 
 static void
@@ -112,14 +121,47 @@ surface_map_transient(struct wl_client *client,
 		container_of(parent, ClaylandSurface, surface);
 	gfloat x, y;
 
-	if (CLUTTER_ACTOR_IS_MAPPED(CLUTTER_ACTOR (csurface)))
-		return;
+	if (csurface->fullscreen) {
+		clutter_actor_set_size(CLUTTER_ACTOR(csurface),
+			csurface->width, csurface->height);
+		csurface->fullscreen = FALSE;
+	}
 
 	clutter_actor_get_position (CLUTTER_ACTOR (cparent), &x, &y);
 	clutter_actor_set_position (CLUTTER_ACTOR (csurface),
 				    x + dx, y + dy);
 
 	clutter_actor_show (CLUTTER_ACTOR (csurface));
+	clutter_actor_set_reactive (CLUTTER_ACTOR (csurface), TRUE);
+}
+
+static void
+surface_map_fullscreen(struct wl_client *client,
+	    struct wl_surface *surface)
+{
+	ClaylandSurface *csurface =
+		container_of(surface, ClaylandSurface, surface);
+	ClutterActor *container = csurface->compositor->container;
+	gfloat width, height, x, y;
+
+	if (csurface->fullscreen)
+		return;
+	csurface->fullscreen = TRUE;
+
+	clutter_actor_get_size(CLUTTER_ACTOR(csurface), &width, &height);
+	clutter_actor_get_position(CLUTTER_ACTOR(csurface), &x, &y);
+	csurface->width = width;
+	csurface->height = height;
+	csurface->x = x;
+	csurface->y = y;
+
+	/* XXX: The container might change size...
+	        Is there a Clutter API for mapping one actor to cover another? */
+	clutter_actor_get_size(container, &width, &height);
+	clutter_actor_set_size(CLUTTER_ACTOR(csurface), width, height);
+	clutter_actor_set_position(CLUTTER_ACTOR(csurface), 0.0, 0.0);
+
+	clutter_actor_show (CLUTTER_ACTOR(csurface));
 	clutter_actor_set_reactive (CLUTTER_ACTOR (csurface), TRUE);
 }
 
@@ -143,6 +185,7 @@ const struct wl_surface_interface clayland_surface_interface = {
 	surface_attach,
 	surface_map_toplevel,
 	surface_map_transient,
+	surface_map_fullscreen,
 	surface_damage
 };
 

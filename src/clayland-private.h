@@ -115,6 +115,8 @@ struct _ClaylandSurface {
 	struct wl_surface	 surface;
 	ClaylandBuffer		*buffer;
 	ClaylandCompositor	*compositor;
+	gboolean fullscreen;
+	gfloat width, height, x, y;
 };
 
 struct _ClaylandSurfaceClass {
