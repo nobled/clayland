@@ -172,7 +172,7 @@ surface_map_fullscreen(struct wl_client *client,
 {
 	ClaylandSurface *csurface =
 		container_of(surface, ClaylandSurface, surface);
-	ClutterActor *container = csurface->compositor->container;
+	ClutterActor *container = csurface->compositor->output->container;
 	ClutterConstraint *x, *y, *w, *h;
 
 	if (SURFACE_IS_FULLSCREEN(csurface))

@@ -23,12 +23,8 @@ clayland_compositor_finalize (GObject *object)
 		g_source_destroy(compositor->source);
 		g_source_unref(compositor->source);
 	}
-	if (g_signal_handler_is_connected(compositor->container,
-		            compositor->event_handler_id))
-		g_signal_handler_disconnect(compositor->container,
-		                compositor->event_handler_id);
-	if (!clutter_stage_is_default(CLUTTER_STAGE(compositor->container)))
-		g_object_unref(compositor->container);
+	if (compositor->output != NULL)
+		g_object_unref(compositor->output);
 	if (compositor->display != NULL)
 		wl_display_destroy (compositor->display);
 	if (compositor->drm_fd >= 0)
@@ -52,8 +48,7 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 {
 	compositor->display = NULL;
 	compositor->source = NULL;
-	compositor->event_handler_id = 0;
-	compositor->container = NULL;
+	compositor->output = NULL;
 	compositor->drm_path = NULL;
 	compositor->drm_fd = -1;
 }
@@ -80,7 +75,7 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 {
 	ClaylandSurface *surface =
 		container_of(resource, ClaylandSurface, surface.resource);
-	ClutterActor *container = surface->compositor->container;
+	ClutterActor *container = surface->compositor->output->container;
 	struct wl_listener *l, *next;
 	uint32_t time;
 
@@ -103,6 +98,7 @@ compositor_create_surface(struct wl_client *client,
 {
 	ClaylandCompositor *clayland =
 		container_of(compositor, ClaylandCompositor, compositor);
+	ClutterActor *container = clayland->output->container;
 	ClaylandSurface *surface;
 
 	surface = g_object_new (clayland_surface_get_type(), NULL);
@@ -111,7 +107,7 @@ compositor_create_surface(struct wl_client *client,
 	        G_OBJECT_TYPE_NAME(surface));
 
 	surface->compositor = g_object_ref (clayland);
-	clutter_container_add_actor(CLUTTER_CONTAINER (clayland->container),
+	clutter_container_add_actor(CLUTTER_CONTAINER (container),
 				    CLUTTER_ACTOR (surface));
 
 	wl_list_init(&surface->surface.destroy_listener_list);
@@ -147,17 +143,14 @@ clayland_compositor_create(ClutterContainer *container)
 	g_debug("creating compositor %p of type '%s'", compositor,
 	        G_OBJECT_TYPE_NAME(compositor));
 
-	if (!clutter_stage_is_default(CLUTTER_STAGE(container)))
-		compositor->container = g_object_ref_sink(container);
-	else
-		compositor->container = CLUTTER_ACTOR(container);
-
 	compositor->display = wl_display_create();
 	if (compositor->display == NULL) {
 		g_warning("failed to create display: %m");
 		g_object_unref(compositor);
 		return NULL;
 	}
+
+	_clayland_add_output(compositor, container);
 
 	compositor->loop = wl_display_get_event_loop(compositor->display);
 	compositor->source = wl_glib_source_new(compositor->loop);

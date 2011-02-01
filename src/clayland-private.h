@@ -20,6 +20,13 @@
 #include <GLES/gl.h>
 #endif
 
+#define CLAYLAND_TYPE_OUTPUT            (clayland_output_get_type ())
+#define CLAYLAND_OUTPUT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_OUTPUT, ClaylandOutput))
+#define CLAYLAND_OUTPUT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), CLAYLAND_TYPE_OUTPUT, ClaylandOutputClass))
+#define CLAYLAND_IS_OUTPUT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), CLAYLAND_TYPE_OUTPUT))
+#define CLAYLAND_IS_OUTPUT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), CLAYLAND_TYPE_OUTPUT))
+#define CLAYLAND_OUTPUT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), CLAYLAND_TYPE_OUTPUT, ClaylandOutputClass))
+
 #define CLAYLAND_TYPE_SURFACE            (clayland_surface_get_type ())
 #define CLAYLAND_SURFACE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_SURFACE, ClaylandSurface))
 #define CLAYLAND_SURFACE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), CLAYLAND_TYPE_SURFACE, ClaylandSurfaceClass))
@@ -34,6 +41,8 @@
 #define CLAYLAND_IS_BUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), CLAYLAND_TYPE_BUFFER))
 #define CLAYLAND_BUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), CLAYLAND_TYPE_BUFFER, ClaylandBufferClass))
 
+typedef struct _ClaylandOutput ClaylandOutput;
+typedef struct _ClaylandOutputClass ClaylandOutputClass;
 typedef struct _ClaylandSurface ClaylandSurface;
 typedef struct _ClaylandSurfaceClass ClaylandSurfaceClass;
 typedef struct _ClaylandBuffer ClaylandBuffer;
@@ -64,6 +73,9 @@ G_GNUC_INTERNAL
 extern const struct wl_shell_interface clayland_shell_interface;
 
 G_GNUC_INTERNAL void
+_clayland_add_output(ClaylandCompositor *compositor,
+                     ClutterContainer *container);
+G_GNUC_INTERNAL void
 _clayland_add_devices(ClaylandCompositor *compositor);
 G_GNUC_INTERNAL void
 _clayland_add_buffer_interfaces(ClaylandCompositor *compositor);
@@ -75,14 +87,15 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
                       struct wl_visual *visual);
 
 G_GNUC_INTERNAL
+GType clayland_output_get_type(void);
+G_GNUC_INTERNAL
 GType clayland_surface_get_type(void);
 G_GNUC_INTERNAL
 GType clayland_buffer_get_type(void);
 
 struct _ClaylandCompositor {
 	GObject			 object;
-	ClutterActor		*container;
-	gulong			 event_handler_id;
+	ClaylandOutput		*output;
 	GSource			*source;
 	struct wl_display	*display;
 	struct wl_event_loop	*loop;
@@ -106,6 +119,17 @@ struct _ClaylandCompositor {
 };
 
 struct _ClaylandCompositorClass {
+	GObjectClass		 object_class;
+};
+
+struct _ClaylandOutput {
+	GObject			 object;
+	struct wl_object	 output;
+	ClutterActor		*container;
+	gulong			 event_handler_id;
+};
+
+struct _ClaylandOutputClass {
 	GObjectClass		 object_class;
 };
 

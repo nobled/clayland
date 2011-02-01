@@ -17,6 +17,7 @@ libclayland_la_SOURCES =			\
 	clayland-shm.c				\
 	clayland-surface.c			\
 	input.c					\
+	output.c				\
 	shell.c					\
 	wayland-source.c			\
 	dri2.c

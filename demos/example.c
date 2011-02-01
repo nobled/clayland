@@ -31,7 +31,8 @@ main (int argc, char *argv[])
 
 	clutter_stage_set_title (CLUTTER_STAGE (stage), "Clayland");
 	clutter_stage_set_color (CLUTTER_STAGE (stage), &stage_color);
-	clutter_stage_set_user_resizable (CLUTTER_STAGE (stage), TRUE);
+	/* TODO: allow resizing; need to post geometry updates when we do */
+	clutter_stage_set_user_resizable (CLUTTER_STAGE (stage), FALSE);
 
 	hand = clutter_texture_new_from_file ("redhand.png", &error);
 	if (hand == NULL)
