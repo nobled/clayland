@@ -53,17 +53,14 @@ event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
 	const struct wl_grab_interface *interface;
 	struct wl_input_device *device;
 	ClutterInputDevice *clutter_device;
-	ClaylandInputDevice *clayland_device;
 	ClaylandSurface *cs;
 	gfloat sx, sy;
 	uint32_t state, button, key;
 
 	clutter_device = clutter_event_get_device (event);
 	if (clutter_device) {
-		clayland_device =
-			g_object_get_data (G_OBJECT(clutter_device),
+		device = g_object_get_data (G_OBJECT(clutter_device),
 					   "clayland");
-		device = &clayland_device->input_device;
 	}
 	else
 		device = NULL;
@@ -241,8 +238,8 @@ _clayland_add_devices(ClaylandCompositor *compositor)
 		g_debug("device %p", l->data);
 		device = CLUTTER_INPUT_DEVICE (l->data);
 
-		g_object_set_data (G_OBJECT (device),
-				   "clayland", clayland_device);
+		g_object_set_data (G_OBJECT (device), "clayland",
+				   &clayland_device->input_device);
 	}
 
 	compositor->event_handler_id =
