@@ -201,6 +201,11 @@ no_match:
 		ext = next;
 	};
 
+        if (ext)
+                g_debug("  found extension: %s", target);
+        else
+                g_debug("missing extension: %s", target);
+
 	return ext != NULL;
 }
 
@@ -221,6 +226,7 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 {
 	EGLDisplay edpy;
 	const char *extensions, *glextensions;
+	gboolean drm;
 
 	compositor->shm_object.interface = &wl_shm_interface;
 	compositor->shm_object.implementation =
@@ -238,9 +244,11 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 	edpy = clutter_egl_display ();
 	extensions = eglQueryString(edpy, EGL_EXTENSIONS);
 	glextensions = glGetString(GL_EXTENSIONS);
-	if (!has_extension(extensions, 18, "EGL_MESA_drm_image") ||
-	    !has_extension(extensions, 18, "EGL_KHR_image_base") ||
-	    !has_extension(glextensions, 16, "GL_OES_EGL_image"))
+	drm = has_extension(extensions, 18, "EGL_MESA_drm_image");
+	drm = has_extension(extensions, 18, "EGL_KHR_image_base") && drm;
+	drm = has_extension(glextensions, 16, "GL_OES_EGL_image") && drm;
+
+	if (drm == FALSE)
 		return;
 
 	compositor->create_image =
@@ -254,8 +262,10 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 	        eglGetProcAddress("glEGLImageTargetTexture2DOES");
 
 	if (!(compositor->create_image) || !(compositor->destroy_image)
-	    || !(compositor->image2tex))
+	    || !(compositor->image2tex)) {
+		g_warning("failed to get function pointers");
 		return;
+	}
 
 	compositor->drm_object.interface = &wl_drm_interface;
 	compositor->drm_object.implementation =
