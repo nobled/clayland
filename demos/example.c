@@ -63,6 +63,13 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 
 	display = clayland_compositor_get_display(compositor);
+
+	if (wl_display_add_socket(display, NULL)) {
+		g_warning("failed to add socket: %m");
+		g_object_unref(compositor);
+		return EXIT_FAILURE;
+	}
+
 	loop = wl_display_get_event_loop(display);
 
 	wl_event_loop_add_signal(loop,

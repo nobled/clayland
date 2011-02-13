@@ -158,12 +158,6 @@ clayland_compositor_create(ClutterContainer *container)
 	compositor->source = wl_glib_source_new(compositor->loop);
 	g_source_attach(compositor->source, NULL);
 
-	if (wl_display_add_socket(compositor->display, NULL)) {
-		g_warning("failed to add socket: %m");
-		g_object_unref(compositor);
-		return NULL;
-	}
-
 	if (wl_compositor_init(&compositor->compositor,
 			       &compositor_interface,
 			       compositor->display) < 0) {
