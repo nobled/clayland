@@ -175,12 +175,11 @@ _clayland_init_buffer(ClaylandBuffer *cbuffer,
 
 
 static gboolean
-has_egl_extension(EGLDisplay dpy, size_t target_len, const char *target)
+has_extension(const char *extensions, size_t target_len, const char *target)
 {
-	const char *extensions, *ext, *next;
+	const char *ext, *next;
 	size_t len;
 
-	extensions = eglQueryString(dpy, EGL_EXTENSIONS);
 	ext = extensions;
 	while (ext) {
 		next = strchr(ext, ' ');
@@ -219,6 +218,8 @@ post_drm_device(struct wl_client *client, struct wl_object *global)
 void
 _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 {
+	const char *extensions, *glextensions;
+
 	compositor->shm_object.interface = &wl_shm_interface;
 	compositor->shm_object.implementation =
 	    (void (**)(void)) &clayland_shm_interface;
@@ -230,8 +231,11 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 		return;
 	}
 
-	if (!has_egl_extension(compositor->egl_display,
-	                       18, "EGL_MESA_drm_image"))
+	extensions = eglQueryString(compositor->egl_display, EGL_EXTENSIONS);
+	glextensions = glGetString(GL_EXTENSIONS);
+	if (!has_extension(extensions, 18, "EGL_MESA_drm_image") ||
+	    !has_extension(extensions, 18, "EGL_KHR_image_base") ||
+	    !has_extension(glextensions, 16, "GL_OES_EGL_image"))
 		return;
 
 	compositor->create_image =
