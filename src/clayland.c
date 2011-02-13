@@ -1,6 +1,5 @@
 #include <wayland-server.h>
 #include <clutter/clutter.h>
-#include <clutter/egl/clutter-egl.h>
 
 #include <sys/time.h>
 #include <math.h>
@@ -164,14 +163,6 @@ clayland_compositor_create(ClutterContainer *container)
 		g_object_unref(compositor);
 		return NULL;
 	}
-
-	/* Can we figure out whether we're compiling against clutter
-	 * x11 or not? */
-	if (dri2_connect(compositor) < 0)
-		g_warning("failed to connect to DRI2");
-
-	compositor->egl_display = clutter_egl_display ();
-	g_debug("egl display %p", compositor->egl_display);
 
 	_clayland_add_devices(compositor);
 	_clayland_add_buffer_interfaces(compositor);

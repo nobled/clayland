@@ -1,4 +1,5 @@
 
+#include <clutter/egl/clutter-egl.h>
 #include <string.h>
 
 #include "clayland-private.h"
@@ -218,6 +219,7 @@ post_drm_device(struct wl_client *client, struct wl_object *global)
 void
 _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 {
+	EGLDisplay edpy;
 	const char *extensions, *glextensions;
 
 	compositor->shm_object.interface = &wl_shm_interface;
@@ -226,12 +228,15 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 	wl_display_add_object(compositor->display, &compositor->shm_object);
 	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
 
-	if (!compositor->drm_path) {
+	/* Can we figure out whether we're compiling against clutter
+	 * x11 or not? */
+	if (dri2_connect(compositor) < 0) {
 		g_warning("DRI2 connect failed, disabling DRM buffers");
 		return;
 	}
 
-	extensions = eglQueryString(compositor->egl_display, EGL_EXTENSIONS);
+	edpy = clutter_egl_display ();
+	extensions = eglQueryString(edpy, EGL_EXTENSIONS);
 	glextensions = glGetString(GL_EXTENSIONS);
 	if (!has_extension(extensions, 18, "EGL_MESA_drm_image") ||
 	    !has_extension(extensions, 18, "EGL_KHR_image_base") ||
@@ -258,5 +263,8 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 	wl_display_add_object(compositor->display, &compositor->drm_object);
 	wl_display_add_global(compositor->display, &compositor->drm_object,
 	                      post_drm_device);
+
+	compositor->egl_display = edpy;
+	g_debug("egl display %p", edpy);
 }
 
