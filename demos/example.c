@@ -1,7 +1,14 @@
 
 #include <clutter/clutter.h>
 #include <stdlib.h>
+#include <wayland-server.h>
 #include "clayland.h"
+
+static void
+on_term_signal(int signal_number, void *data)
+{
+	clutter_main_quit();
+}
 
 int
 main (int argc, char *argv[])
@@ -10,6 +17,8 @@ main (int argc, char *argv[])
 	ClutterColor  stage_color = { 0x61, 0x64, 0x8c, 0xff };
 	ClaylandCompositor *compositor;
 	GError       *error;
+	struct wl_display *display;
+	struct wl_event_loop *loop;
 
 	g_thread_init(NULL);
 	clutter_threads_init();
@@ -52,6 +61,14 @@ main (int argc, char *argv[])
 	compositor = clayland_compositor_create(CLUTTER_CONTAINER(stage));
 	if (!compositor)
 		return EXIT_FAILURE;
+
+	display = clayland_compositor_get_display(compositor);
+	loop = wl_display_get_event_loop(display);
+
+	wl_event_loop_add_signal(loop,
+				 SIGTERM, on_term_signal, compositor);
+	wl_event_loop_add_signal(loop,
+				 SIGINT, on_term_signal, compositor);
 
 	clutter_threads_enter();
 	clutter_main ();

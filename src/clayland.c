@@ -54,12 +54,6 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 }
 
 
-static void
-on_term_signal(int signal_number, void *data)
-{
-	clutter_main_quit();
-}
-
 static uint32_t
 get_time(void)
 {
@@ -197,11 +191,6 @@ clayland_compositor_create(ClutterContainer *container)
 		g_object_unref(compositor);
 		return NULL;
 	}
-
-	wl_event_loop_add_signal(compositor->loop,
-				 SIGTERM, on_term_signal, compositor);
-	wl_event_loop_add_signal(compositor->loop,
-				 SIGINT, on_term_signal, compositor);
 
 	return compositor;
 }
