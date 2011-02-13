@@ -130,6 +130,14 @@ const static struct wl_compositor_interface compositor_interface = {
 	compositor_create_surface,
 };
 
+struct wl_display *
+clayland_compositor_get_display(ClaylandCompositor *compositor)
+{
+	g_return_val_if_fail(CLAYLAND_IS_COMPOSITOR(compositor), NULL);
+
+	return compositor->display;
+}
+
 ClaylandCompositor *
 clayland_compositor_create(ClutterContainer *container)
 {

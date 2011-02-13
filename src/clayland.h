@@ -29,6 +29,11 @@ GType clayland_compositor_get_type(void);
 CLAYLAND_EXPORT
 ClaylandCompositor *clayland_compositor_create(ClutterContainer *container);
 
+struct wl_display;
+
+CLAYLAND_EXPORT struct wl_display *
+clayland_compositor_get_display(ClaylandCompositor *compositor);
+
 G_END_DECLS
 
 #endif /* CLAYLAND_H */
