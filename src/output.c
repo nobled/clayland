@@ -16,6 +16,10 @@ clayland_output_finalize (GObject *object)
 		            output->event_handler_id))
 		g_signal_handler_disconnect(output->container,
 		                output->event_handler_id);
+	if (g_signal_handler_is_connected(output->container,
+		            output->delete_handler_id))
+		g_signal_handler_disconnect(output->container,
+		                output->delete_handler_id);
 	if (!clutter_stage_is_default(CLUTTER_STAGE(output->container)))
 		g_object_unref(output->container);
 
@@ -35,10 +39,30 @@ clayland_output_init (ClaylandOutput *output)
 {
 	output->container = NULL;
 	output->event_handler_id = 0;
+	output->delete_handler_id = 0;
 }
 
 static gboolean
-event_cb (ClutterActor *stage, ClutterEvent *event, gpointer      data)
+delete_cb(ClutterStage *container, ClutterEvent *event, gpointer data)
+{
+	ClaylandCompositor *compositor = CLAYLAND_COMPOSITOR (data);
+
+	if (compositor->output->container != CLUTTER_ACTOR(container))
+		return FALSE;
+
+	if (!clutter_stage_is_default(CLUTTER_STAGE(container)))
+		clutter_actor_destroy(CLUTTER_ACTOR(container));
+
+	g_object_unref(compositor->output);
+	compositor->output = NULL;
+	/* TODO: once there's multiple-output support, only quit
+	   when the number of outputs reaches zero */
+	clutter_main_quit();
+	return TRUE;
+}
+
+static gboolean
+event_cb (ClutterActor *container, ClutterEvent *event, gpointer data)
 {
 	const struct wl_grab_interface *interface;
 	struct wl_input_device *device;
@@ -206,7 +230,12 @@ _clayland_add_output(ClaylandCompositor *compositor,
 	output->event_handler_id =
 	    g_signal_connect_object (container, "captured-event",
 			  G_CALLBACK (event_cb),
-			  compositor, 0);
+			  NULL, 0);
+	if (CLUTTER_IS_STAGE(container))
+		output->delete_handler_id =
+		    g_signal_connect_object (container, "delete-event",
+				  G_CALLBACK (delete_cb),
+				  compositor, 0);
 
 	output->output.interface = &wl_output_interface;
 
