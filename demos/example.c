@@ -34,7 +34,10 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	stage = clutter_stage_get_default ();
+	stage = clutter_stage_new ();
+	if (!stage)
+		return EXIT_FAILURE;
+
 	clutter_actor_set_size (stage, 800, 600);
 	clutter_actor_set_name (stage, "Clayland");
 
