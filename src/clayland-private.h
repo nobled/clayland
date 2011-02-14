@@ -10,9 +10,6 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <wayland-server.h>
-#if defined(CLUTTER_WINDOWING_X11)
-#include <X11/Xlib-xcb.h>
-#endif
 
 #if defined(COGL_HAS_GL)
 #include <GL/gl.h>
@@ -20,6 +17,12 @@
 #include <GLES2/gl2.h>
 #elif defined(COGL_HAS_GLES1)
 #include <GLES/gl.h>
+#endif
+
+#include "clayland-config.h"
+
+#if defined(HAVE_DRI2_X11)
+#include <X11/Xlib-xcb.h>
 #endif
 
 #define CLAYLAND_COMPOSITOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositorClass))
@@ -65,7 +68,7 @@ VISUAL_RGB
 G_GNUC_INTERNAL
 GSource *wl_glib_source_new(struct wl_event_loop *loop);
 
-#if defined(CLUTTER_WINDOWING_X11)
+#if defined(HAVE_DRI2_X11)
 G_GNUC_INTERNAL
 int dri2_x11_connect(ClaylandCompositor *compositor);
 G_GNUC_INTERNAL
@@ -75,7 +78,7 @@ int dri2_x11_authenticate(ClaylandCompositor *compositor, uint32_t magic);
 static inline
 int dri2_connect(ClaylandCompositor *compositor)
 {
-#if defined(CLUTTER_WINDOWING_X11)
+#if defined(HAVE_DRI2_X11)
 return dri2_x11_connect(compositor);
 #else
 return -1;
@@ -85,7 +88,7 @@ return -1;
 static inline
 int dri2_authenticate(ClaylandCompositor *compositor, uint32_t magic)
 {
-#if defined(CLUTTER_WINDOWING_X11)
+#if defined(HAVE_DRI2_X11)
 return dri2_x11_authenticate(compositor, magic);
 #else
 return -1;
@@ -143,7 +146,7 @@ struct _ClaylandCompositor {
 
 	int			 drm_fd;
 	char			*drm_path;
-#ifdef CLUTTER_WINDOWING_X11
+#if defined(HAVE_DRI2_X11)
 	xcb_connection_t	*xconn;
 	Window			 root_window;
 #endif

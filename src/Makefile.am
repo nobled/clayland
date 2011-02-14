@@ -20,5 +20,9 @@ libclayland_la_SOURCES =			\
 	output.c				\
 	shell.c					\
 	wayland-source.c			\
-	dri2-x11.c
+	$(dri2_sources)
+
+if HAVE_X11
+dri2_sources = dri2-x11.c
+endif
 
