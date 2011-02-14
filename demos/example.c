@@ -34,6 +34,12 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	display = wl_display_create();
+	if (display == NULL) {
+		g_warning("failed to create display: %m");
+		return EXIT_FAILURE;
+	}
+
 	stage = clutter_stage_new ();
 	if (!stage)
 		return EXIT_FAILURE;
@@ -61,11 +67,11 @@ main (int argc, char *argv[])
 	/* Show everying */
 	clutter_actor_show (stage);
 
-	compositor = clayland_compositor_create(CLUTTER_CONTAINER(stage));
+	compositor = clayland_compositor_create(display);
 	if (!compositor)
 		return EXIT_FAILURE;
 
-	display = clayland_compositor_get_display(compositor);
+	clayland_compositor_add_output(compositor, CLUTTER_CONTAINER(stage));
 
 	if (wl_display_add_socket(display, NULL)) {
 		g_warning("failed to add socket: %m");

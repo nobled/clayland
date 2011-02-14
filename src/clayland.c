@@ -91,8 +91,12 @@ compositor_create_surface(struct wl_client *client,
 {
 	ClaylandCompositor *clayland =
 		container_of(compositor, ClaylandCompositor, compositor);
-	ClutterActor *container = clayland->output->container;
+	ClutterActor *container;
 	ClaylandSurface *surface;
+
+	if (clayland->output == NULL)
+		return;
+	container = clayland->output->container;
 
 	surface = g_object_new (clayland_surface_get_type(), NULL);
 
@@ -132,30 +136,18 @@ clayland_compositor_get_display(ClaylandCompositor *compositor)
 }
 
 ClaylandCompositor *
-clayland_compositor_create(ClutterContainer *container)
+clayland_compositor_create(struct wl_display *display)
 {
 	ClaylandCompositor *compositor;
 
-	g_return_val_if_fail(CLUTTER_IS_CONTAINER(container)
-	                    && CLUTTER_IS_ACTOR(container), NULL);
+	g_return_val_if_fail(display != NULL, NULL);
 
 	compositor = g_object_new (clayland_compositor_get_type(), NULL);
 
 	g_debug("creating compositor %p of type '%s'", compositor,
 	        G_OBJECT_TYPE_NAME(compositor));
 
-	compositor->display = wl_display_create();
-	if (compositor->display == NULL) {
-		g_warning("failed to create display: %m");
-		g_object_unref(compositor);
-		return NULL;
-	}
-
-	_clayland_add_output(compositor, container);
-
-	compositor->loop = wl_display_get_event_loop(compositor->display);
-	compositor->source = wl_glib_source_new(compositor->loop);
-	g_source_attach(compositor->source, NULL);
+	compositor->display = display;
 
 	if (wl_compositor_init(&compositor->compositor,
 			       &compositor_interface,
@@ -163,6 +155,10 @@ clayland_compositor_create(ClutterContainer *container)
 		g_object_unref(compositor);
 		return NULL;
 	}
+
+	compositor->loop = wl_display_get_event_loop(compositor->display);
+	compositor->source = wl_glib_source_new(compositor->loop);
+	g_source_attach(compositor->source, NULL);
 
 	_clayland_add_devices(compositor);
 	_clayland_add_buffer_interfaces(compositor);

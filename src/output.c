@@ -212,10 +212,18 @@ post_geometry(struct wl_client *client, struct wl_object *global)
 }
 
 void
-_clayland_add_output(ClaylandCompositor *compositor,
-                     ClutterContainer *container)
+clayland_compositor_add_output(ClaylandCompositor *compositor,
+                               ClutterContainer *container)
 {
 	ClaylandOutput *output;
+
+	g_return_if_fail(CLAYLAND_IS_COMPOSITOR(compositor) &&
+	                 CLUTTER_IS_CONTAINER(container) &&
+	                 CLUTTER_IS_ACTOR(container));
+
+	/* TODO: allow multiple outputs. */
+	if (compositor->output != NULL)
+		return;
 
 	output = g_object_new(clayland_output_get_type(), NULL);
 
@@ -243,7 +251,6 @@ _clayland_add_output(ClaylandCompositor *compositor,
 	wl_display_add_global(compositor->display,
 	                      &output->output, post_geometry);
 
-	/* TODO: allow multiple outputs. */
 	compositor->output = output;
 }
 
