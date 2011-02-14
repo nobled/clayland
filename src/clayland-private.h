@@ -20,6 +20,10 @@
 #include <GLES/gl.h>
 #endif
 
+#define CLAYLAND_COMPOSITOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositorClass))
+#define CLAYLAND_IS_COMPOSITOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), CLAYLAND_TYPE_COMPOSITOR))
+#define CLAYLAND_COMPOSITOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositorClass))
+
 #define CLAYLAND_TYPE_OUTPUT            (clayland_output_get_type ())
 #define CLAYLAND_OUTPUT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_OUTPUT, ClaylandOutput))
 #define CLAYLAND_OUTPUT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), CLAYLAND_TYPE_OUTPUT, ClaylandOutputClass))
@@ -41,6 +45,7 @@
 #define CLAYLAND_IS_BUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), CLAYLAND_TYPE_BUFFER))
 #define CLAYLAND_BUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), CLAYLAND_TYPE_BUFFER, ClaylandBufferClass))
 
+typedef struct _ClaylandCompositorClass ClaylandCompositorClass;
 typedef struct _ClaylandOutput ClaylandOutput;
 typedef struct _ClaylandOutputClass ClaylandOutputClass;
 typedef struct _ClaylandSurface ClaylandSurface;
