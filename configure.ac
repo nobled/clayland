@@ -12,13 +12,38 @@ PKG_PROG_PKG_CONFIG()
 clayland_deps="wayland-server clutter-1.0"
 x11_deps="clutter-x11-1.0 clutter-egl-1.0 x11-xcb xcb-dri2"
 
+clutter_backend="auto"
+AC_ARG_WITH([backend],
+	[AC_HELP_STRING([--with-backend=@<:@x11-egl,generic,auto@:>@],
+		[Select Clutter backend - determines whether DRM buffers are possible])],
+	[clutter_backend=$with_backend])
+
 PKG_CHECK_EXISTS([$x11_deps],[
 	have_x11=yes
-	clutter_backend="x11-egl"
 	],[
 	have_x11=no
-	clutter_backend="generic"
 ])
+
+case "$clutter_backend" in
+x11-egl)
+	if test "x$have_x11" != "xyes"; then
+		AC_MSG_ERROR([Can't build x11-egl backend: missing dependencies])
+	fi
+	;;
+generic)
+	have_x11=no
+	;;
+auto)
+	if test "x$have_x11" = "xyes"; then
+		clutter_backend="x11-egl"
+	else
+		clutter_backend="generic"
+	fi
+	;;
+*)
+	AC_MSG_ERROR([Invalid backend selected])
+	;;
+esac
 
 have_drm=$have_x11
 
