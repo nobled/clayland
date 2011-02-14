@@ -20,5 +20,5 @@ libclayland_la_SOURCES =			\
 	output.c				\
 	shell.c					\
 	wayland-source.c			\
-	dri2.c
+	dri2-x11.c
 

@@ -9,7 +9,7 @@
 #include "clayland-config.h"
 
 int
-dri2_connect(ClaylandCompositor *compositor)
+dri2_x11_connect(ClaylandCompositor *compositor)
 {
 	Display *dpy;
 	xcb_connection_t *conn;
@@ -100,7 +100,7 @@ dri2_connect(ClaylandCompositor *compositor)
 }
 
 int
-dri2_authenticate(ClaylandCompositor *compositor, uint32_t magic)
+dri2_x11_authenticate(ClaylandCompositor *compositor, uint32_t magic)
 {
 	xcb_connection_t *conn;
 	xcb_dri2_authenticate_reply_t *authenticate;

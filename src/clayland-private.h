@@ -10,7 +10,9 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <wayland-server.h>
+#if defined(CLUTTER_WINDOWING_X11)
 #include <X11/Xlib-xcb.h>
+#endif
 
 #if defined(COGL_HAS_GL)
 #include <GL/gl.h>
@@ -63,10 +65,32 @@ VISUAL_RGB
 G_GNUC_INTERNAL
 GSource *wl_glib_source_new(struct wl_event_loop *loop);
 
+#if defined(CLUTTER_WINDOWING_X11)
 G_GNUC_INTERNAL
-int dri2_connect(ClaylandCompositor *compositor);
+int dri2_x11_connect(ClaylandCompositor *compositor);
 G_GNUC_INTERNAL
-int dri2_authenticate(ClaylandCompositor *compositor, uint32_t magic);
+int dri2_x11_authenticate(ClaylandCompositor *compositor, uint32_t magic);
+#endif
+
+static inline
+int dri2_connect(ClaylandCompositor *compositor)
+{
+#if defined(CLUTTER_WINDOWING_X11)
+return dri2_x11_connect(compositor);
+#else
+return -1;
+#endif
+}
+
+static inline
+int dri2_authenticate(ClaylandCompositor *compositor, uint32_t magic)
+{
+#if defined(CLUTTER_WINDOWING_X11)
+return dri2_x11_authenticate(compositor, magic);
+#else
+return -1;
+#endif
+}
 
 G_GNUC_INTERNAL
 extern const struct wl_surface_interface clayland_surface_interface;
@@ -119,8 +143,10 @@ struct _ClaylandCompositor {
 
 	int			 drm_fd;
 	char			*drm_path;
+#ifdef CLUTTER_WINDOWING_X11
 	xcb_connection_t	*xconn;
 	Window			 root_window;
+#endif
 };
 
 struct _ClaylandCompositorClass {

@@ -1,5 +1,8 @@
 
+#include <clutter/clutter.h>
+#if defined(CLUTTER_WINDOWING_EGL)
 #include <clutter/egl/clutter-egl.h>
+#endif
 #include <string.h>
 
 #include "clayland-private.h"
@@ -240,8 +243,11 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 		g_warning("DRI2 connect failed, disabling DRM buffers");
 		return;
 	}
-
+#if defined(CLUTTER_WINDOWING_X11) && defined(CLUTTER_WINDOWING_EGL)
 	edpy = clutter_egl_display ();
+#else
+	edpy = EGL_NO_DISPLAY;
+#endif
 	extensions = eglQueryString(edpy, EGL_EXTENSIONS);
 	glextensions = glGetString(GL_EXTENSIONS);
 	drm = has_extension(extensions, 18, "EGL_MESA_drm_image");
