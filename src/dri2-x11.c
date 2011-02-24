@@ -112,7 +112,7 @@ dri2_x11_connect(ClaylandCompositor *compositor)
 
 	compositor->drm_fd = fd;
 	compositor->xconn = conn;
-	compositor->root_window = root;
+	compositor->root_xwindow = root;
 
 	return 0;
 }
@@ -126,7 +126,7 @@ dri2_x11_authenticate(ClaylandCompositor *compositor, uint32_t magic)
 	Window root;
 
 	conn = compositor->xconn;
-	root = compositor->root_window;
+	root = compositor->root_xwindow;
 
 	authenticate_cookie =
 		xcb_dri2_authenticate_unchecked(conn, root, magic);

@@ -39,10 +39,6 @@
 
 #include "clayland-config.h"
 
-#if defined(HAVE_DRI2_X11)
-#include <X11/Xlib-xcb.h>
-#endif
-
 #define CLAYLAND_COMPOSITOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositorClass))
 #define CLAYLAND_IS_COMPOSITOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), CLAYLAND_TYPE_COMPOSITOR))
 #define CLAYLAND_COMPOSITOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), CLAYLAND_TYPE_COMPOSITOR, ClaylandCompositorClass))
@@ -164,10 +160,9 @@ struct _ClaylandCompositor {
 
 	int			 drm_fd;
 	char			*drm_path;
-#if defined(HAVE_DRI2_X11)
-	xcb_connection_t	*xconn;
-	Window			 root_window;
-#endif
+	/* for dri2 on x11: */
+	gpointer		 xconn;
+	gulong			 root_xwindow;
 };
 
 struct _ClaylandCompositorClass {
