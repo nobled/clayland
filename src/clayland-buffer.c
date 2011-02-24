@@ -7,7 +7,7 @@
 
 #include "clayland-private.h"
 
-G_DEFINE_TYPE (ClaylandBuffer, clayland_buffer, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (ClaylandBuffer, clayland_buffer, G_TYPE_OBJECT);
 
 static void
 clayland_buffer_finalize (GObject *object)
