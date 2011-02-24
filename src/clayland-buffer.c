@@ -240,10 +240,8 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 	wl_display_add_object(compositor->display, &compositor->shm_object);
 	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
 
-	/* Can we figure out whether we're compiling against clutter
-	 * x11 or not? */
 	if (dri2_connect(compositor) < 0) {
-		g_warning("DRI2 connect failed, disabling DRM buffers");
+		g_debug("Could not connect to DRI2, disabling DRM buffers");
 		return;
 	}
 #if defined(CLUTTER_WINDOWING_X11) && defined(CLUTTER_WINDOWING_EGL)
