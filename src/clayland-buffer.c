@@ -3,6 +3,9 @@
 #if defined(CLUTTER_WINDOWING_EGL)
 #include <clutter/egl/clutter-egl.h>
 #endif
+
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <string.h>
 
 #include "clayland-private.h"
