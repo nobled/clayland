@@ -19,15 +19,17 @@ main (int argc, char *argv[])
 	GError       *error;
 	struct wl_display *display;
 	struct wl_event_loop *loop;
+	ClutterInitError init;
 
 	g_thread_init(NULL);
 	clutter_threads_init();
 
 	error = NULL;
 
-	clutter_init_with_args (&argc, &argv, NULL, NULL, NULL, &error);
-	if (error) {
-		g_warning ("Unable to initialise Clutter:\n%s",
+	init = clutter_init_with_args (&argc, &argv, NULL,
+	                               NULL, NULL, &error);
+	if (init != CLUTTER_INIT_SUCCESS) {
+		g_warning ("Unable to initialise Clutter:\n\t%s",
 			   error->message);
 		g_error_free (error);
 
