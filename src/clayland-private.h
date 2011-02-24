@@ -79,9 +79,6 @@ VISUAL_ARGB,
 VISUAL_RGB
 };
 
-G_GNUC_INTERNAL
-GSource *wl_glib_source_new(struct wl_event_loop *loop);
-
 #if defined(HAVE_DRI2_X11)
 G_GNUC_INTERNAL
 int dri2_x11_connect(ClaylandCompositor *compositor);
@@ -142,9 +139,7 @@ GType clayland_buffer_get_type(void);
 struct _ClaylandCompositor {
 	GObject			 object;
 	ClaylandOutput		*output;
-	GSource			*source;
 	struct wl_display	*display;
-	struct wl_event_loop	*loop;
 
 	struct wl_compositor	 compositor;
 	struct wl_object	 shm_object;

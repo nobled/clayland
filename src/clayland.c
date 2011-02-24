@@ -36,10 +36,6 @@ clayland_compositor_finalize (GObject *object)
 	g_debug("finalizing compositor %p of type '%s'", object,
 	        G_OBJECT_TYPE_NAME(object));
 
-	if (compositor->source != NULL) {
-		g_source_destroy(compositor->source);
-		g_source_unref(compositor->source);
-	}
 	if (compositor->output != NULL)
 		g_object_unref(compositor->output);
 	if (compositor->display != NULL)
@@ -64,7 +60,6 @@ static void
 clayland_compositor_init (ClaylandCompositor *compositor)
 {
 	compositor->display = NULL;
-	compositor->source = NULL;
 	compositor->output = NULL;
 	compositor->drm_path = NULL;
 	compositor->drm_fd = -1;
@@ -173,10 +168,6 @@ clayland_compositor_create(struct wl_display *display)
 		g_object_unref(compositor);
 		return NULL;
 	}
-
-	compositor->loop = wl_display_get_event_loop(compositor->display);
-	compositor->source = wl_glib_source_new(compositor->loop);
-	g_source_attach(compositor->source, NULL);
 
 	_clayland_add_devices(compositor);
 	_clayland_add_buffer_interfaces(compositor);

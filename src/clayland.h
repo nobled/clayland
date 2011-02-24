@@ -36,6 +36,7 @@ G_BEGIN_DECLS
 #endif
 
 struct wl_display;
+struct wl_event_loop;
 
 typedef struct _ClaylandCompositor ClaylandCompositor;
 
@@ -44,6 +45,9 @@ GType clayland_compositor_get_type(void);
 
 CLAYLAND_EXPORT
 ClaylandCompositor *clayland_compositor_create(struct wl_display *display);
+
+CLAYLAND_EXPORT
+GSource *clayland_source_new(struct wl_event_loop *loop);
 
 /* XXX: can only have one output for now */
 CLAYLAND_EXPORT

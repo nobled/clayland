@@ -16,10 +16,12 @@ main (int argc, char *argv[])
 	ClutterActor *stage, *hand;
 	ClutterColor  stage_color = { 0x61, 0x64, 0x8c, 0xff };
 	ClaylandCompositor *compositor;
+	GSource      *source;
 	GError       *error;
 	struct wl_display *display;
 	struct wl_event_loop *loop;
 	ClutterInitError init;
+	guint source_id;
 
 	g_thread_init(NULL);
 	clutter_threads_init();
@@ -83,6 +85,14 @@ main (int argc, char *argv[])
 
 	loop = wl_display_get_event_loop(display);
 
+	source = clayland_source_new (loop);
+	source_id = g_source_attach (source, NULL);
+	if (source == NULL || source_id == 0) {
+		g_source_unref (source);
+		g_object_unref (compositor);
+		return EXIT_FAILURE;
+	}
+
 	wl_event_loop_add_signal(loop,
 				 SIGTERM, on_term_signal, compositor);
 	wl_event_loop_add_signal(loop,
@@ -92,6 +102,8 @@ main (int argc, char *argv[])
 	clutter_main ();
 	clutter_threads_leave();
 
+	g_source_destroy (source);
+	g_source_unref (source);
 	g_object_unref (compositor);
 
 	return EXIT_SUCCESS;

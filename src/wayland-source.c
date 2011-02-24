@@ -20,6 +20,8 @@
 #include <glib.h>
 #include <wayland-server.h>
 
+#include "clayland.h"
+
 typedef struct _WlSource {
 	GSource source;
 	GPollFD pfd;
@@ -68,12 +70,17 @@ static GSourceFuncs wl_glib_source_funcs = {
 };
 
 GSource *
-wl_glib_source_new(struct wl_event_loop *loop)
+clayland_source_new(struct wl_event_loop *loop)
 {
 	WlSource *source;
 
+	g_return_val_if_fail(loop != NULL, NULL);
+
 	source = (WlSource *) g_source_new(&wl_glib_source_funcs,
 					   sizeof (WlSource));
+	if (source == NULL)
+		return NULL;
+
 	source->loop = loop;
 	source->pfd.fd = wl_event_loop_get_fd(loop);
 	source->pfd.events = G_IO_IN | G_IO_ERR;
