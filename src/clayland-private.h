@@ -168,7 +168,8 @@ struct _ClaylandOutput {
 	GObject			 object;
 	struct wl_object	 output;
 	ClutterActor		*container;
-	gulong			 event_handler_id, destroy_handler_id;
+	gulong			 event_handler_id, resize_handler_id,
+				 destroy_handler_id;
 };
 
 struct _ClaylandOutputClass {

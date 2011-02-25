@@ -34,6 +34,10 @@ clayland_output_finalize (GObject *object)
 		g_signal_handler_disconnect(output->container,
 		                output->event_handler_id);
 	if (g_signal_handler_is_connected(output->container,
+		            output->resize_handler_id))
+		g_signal_handler_disconnect(output->container,
+		                output->resize_handler_id);
+	if (g_signal_handler_is_connected(output->container,
 		            output->destroy_handler_id))
 		g_signal_handler_disconnect(output->container,
 		                output->destroy_handler_id);
@@ -211,6 +215,21 @@ event_cb (ClutterActor *container, ClutterEvent *event, gpointer data)
 }
 
 static void
+resize_cb(GObject *object, GParamSpec *pspec, gpointer data)
+{
+	ClutterActor *container = CLUTTER_ACTOR (object);
+	ClaylandCompositor *compositor = CLAYLAND_COMPOSITOR(data);
+	struct wl_display *display = compositor->display;
+	gfloat width, height;
+
+	clutter_actor_get_size (container, &width, &height);
+
+	/* XXX: as soon as Wayland offers a way to do it,
+	   post a global WL_OUTPUT_GEOMETRY event */
+	(void) display;
+}
+
+static void
 post_geometry(struct wl_client *client, struct wl_object *global)
 {
 	ClaylandOutput *output =
@@ -255,6 +274,10 @@ clayland_compositor_add_output(ClaylandCompositor *compositor,
 	    g_signal_connect_object (container, "captured-event",
 			  G_CALLBACK (event_cb),
 			  NULL, flags);
+	output->resize_handler_id =
+	    g_signal_connect_object (container, "notify::allocation",
+			  G_CALLBACK (resize_cb),
+			  compositor, flags);
 	output->destroy_handler_id =
 	    g_signal_connect_object (container, "destroy",
 			  G_CALLBACK (destroy_cb),
