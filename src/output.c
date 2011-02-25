@@ -34,9 +34,9 @@ clayland_output_finalize (GObject *object)
 		g_signal_handler_disconnect(output->container,
 		                output->event_handler_id);
 	if (g_signal_handler_is_connected(output->container,
-		            output->delete_handler_id))
+		            output->destroy_handler_id))
 		g_signal_handler_disconnect(output->container,
-		                output->delete_handler_id);
+		                output->destroy_handler_id);
 	if (!clutter_stage_is_default(CLUTTER_STAGE(output->container)))
 		g_object_unref(output->container);
 
@@ -56,26 +56,24 @@ clayland_output_init (ClaylandOutput *output)
 {
 	output->container = NULL;
 	output->event_handler_id = 0;
-	output->delete_handler_id = 0;
+	output->destroy_handler_id = 0;
 }
 
-static gboolean
-delete_cb(ClutterStage *container, ClutterEvent *event, gpointer data)
+static void
+destroy_cb(ClutterActor *container, gpointer data)
 {
 	ClaylandCompositor *compositor = CLAYLAND_COMPOSITOR (data);
 
-	if (compositor->output->container != CLUTTER_ACTOR(container))
-		return FALSE;
-
-	if (!clutter_stage_is_default(CLUTTER_STAGE(container)))
-		clutter_actor_destroy(CLUTTER_ACTOR(container));
+	if (compositor->output->container != container)
+		return;
 
 	g_object_unref(compositor->output);
 	compositor->output = NULL;
+
 	/* TODO: once there's multiple-output support, only quit
 	   when the number of outputs reaches zero */
 	clutter_main_quit();
-	return TRUE;
+	return;
 }
 
 static gboolean
@@ -257,11 +255,10 @@ clayland_compositor_add_output(ClaylandCompositor *compositor,
 	    g_signal_connect_object (container, "captured-event",
 			  G_CALLBACK (event_cb),
 			  NULL, flags);
-	if (CLUTTER_IS_STAGE(container))
-		output->delete_handler_id =
-		    g_signal_connect_object (container, "delete-event",
-				  G_CALLBACK (delete_cb),
-				  compositor, flags);
+	output->destroy_handler_id =
+	    g_signal_connect_object (container, "destroy",
+			  G_CALLBACK (destroy_cb),
+			  compositor, flags);
 
 	output->output.interface = &wl_output_interface;
 
