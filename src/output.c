@@ -233,6 +233,7 @@ clayland_compositor_add_output(ClaylandCompositor *compositor,
                                ClutterContainer *container)
 {
 	ClaylandOutput *output;
+	GConnectFlags flags = 0;
 
 	g_return_if_fail(CLAYLAND_IS_COMPOSITOR(compositor) &&
 	                 CLUTTER_IS_CONTAINER(container) &&
@@ -255,12 +256,12 @@ clayland_compositor_add_output(ClaylandCompositor *compositor,
 	output->event_handler_id =
 	    g_signal_connect_object (container, "captured-event",
 			  G_CALLBACK (event_cb),
-			  NULL, 0);
+			  NULL, flags);
 	if (CLUTTER_IS_STAGE(container))
 		output->delete_handler_id =
 		    g_signal_connect_object (container, "delete-event",
 				  G_CALLBACK (delete_cb),
-				  compositor, 0);
+				  compositor, flags);
 
 	output->output.interface = &wl_output_interface;
 
