@@ -25,24 +25,23 @@ static void
 clayland_output_finalize (GObject *object)
 {
 	ClaylandOutput *output = CLAYLAND_OUTPUT(object);
+	ClutterActor *container = output->container;
+	gulong ids[3];
+	guint i;
+
+	ids[0] = output->event_handler_id;
+	ids[1] = output->resize_handler_id;
+	ids[2] = output->destroy_handler_id;
 
 	g_debug("finalizing output %p of type '%s'", object,
 	        G_OBJECT_TYPE_NAME(object));
 
-	if (g_signal_handler_is_connected(output->container,
-		            output->event_handler_id))
-		g_signal_handler_disconnect(output->container,
-		                output->event_handler_id);
-	if (g_signal_handler_is_connected(output->container,
-		            output->resize_handler_id))
-		g_signal_handler_disconnect(output->container,
-		                output->resize_handler_id);
-	if (g_signal_handler_is_connected(output->container,
-		            output->destroy_handler_id))
-		g_signal_handler_disconnect(output->container,
-		                output->destroy_handler_id);
-	if (!clutter_stage_is_default(CLUTTER_STAGE(output->container)))
-		g_object_unref(output->container);
+	for (i = 0; i < sizeof ids/sizeof ids[0]; i++)
+		if (g_signal_handler_is_connected(container, ids[i]))
+			g_signal_handler_disconnect(container, ids[i]);
+
+	if (!clutter_stage_is_default(CLUTTER_STAGE(container)))
+		g_object_unref(container);
 
 	G_OBJECT_CLASS (clayland_output_parent_class)->finalize (object);
 }
