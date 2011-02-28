@@ -4,6 +4,19 @@
 #include <wayland-server.h>
 #include "clayland.h"
 
+static char *option_socket_name = NULL;
+
+static GOptionEntry option_entries[] = {
+	{ "socket", '\0', (GOptionFlags)0, G_OPTION_ARG_STRING,	
+	  &option_socket_name, "Wayland socket name", "SOCKET" },
+	{ NULL }
+};
+
+static void free_options(void)
+{
+	g_free (option_socket_name);
+}
+
 static void
 on_term_signal(int signal_number, void *data)
 {
@@ -27,9 +40,11 @@ main (int argc, char *argv[])
 	clutter_threads_init();
 
 	error = NULL;
+	g_atexit(free_options);
 
-	init = clutter_init_with_args (&argc, &argv, NULL,
-	                               NULL, NULL, &error);
+	init = clutter_init_with_args (&argc, &argv,
+	                               "(a Clutter-based Wayland compositor)",
+	                               option_entries, NULL, &error);
 	if (init != CLUTTER_INIT_SUCCESS) {
 		g_warning ("Unable to initialise Clutter:\n\t%s",
 			   error->message);
@@ -77,7 +92,7 @@ main (int argc, char *argv[])
 
 	clayland_compositor_add_output(compositor, CLUTTER_CONTAINER(stage));
 
-	if (wl_display_add_socket(display, NULL)) {
+	if (wl_display_add_socket(display, option_socket_name)) {
 		g_warning("failed to add socket: %m");
 		g_object_unref(compositor);
 		return EXIT_FAILURE;
