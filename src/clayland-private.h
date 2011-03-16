@@ -123,6 +123,9 @@ _clayland_add_devices(ClaylandCompositor *compositor);
 G_GNUC_INTERNAL void
 _clayland_add_buffer_interfaces(ClaylandCompositor *compositor);
 
+G_GNUC_INTERNAL ClutterActor *
+_clayland_output_get_container(ClaylandOutput *output);
+
 G_GNUC_INTERNAL CoglPixelFormat
 _clayland_init_buffer(ClaylandBuffer *cbuffer,
                       ClaylandCompositor *compositor,
@@ -161,18 +164,6 @@ struct _ClaylandCompositor {
 };
 
 struct _ClaylandCompositorClass {
-	GObjectClass		 object_class;
-};
-
-struct _ClaylandOutput {
-	GObject			 object;
-	struct wl_object	 output;
-	ClutterActor		*container;
-	gulong			 event_handler_id, resize_handler_id,
-				 destroy_handler_id;
-};
-
-struct _ClaylandOutputClass {
 	GObjectClass		 object_class;
 };
 

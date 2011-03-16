@@ -19,6 +19,26 @@
 #include "clayland-private.h"
 
 
+struct _ClaylandOutput {
+	GObject			 object;
+	struct wl_object	 output;
+	ClutterActor		*container;
+	gulong			 event_handler_id, resize_handler_id,
+				 destroy_handler_id;
+};
+
+struct _ClaylandOutputClass {
+	GObjectClass		 object_class;
+};
+
+ClutterActor *
+_clayland_output_get_container(ClaylandOutput *output)
+{
+	if (!output)
+		return NULL;
+	return output->container;
+}
+
 G_DEFINE_TYPE (ClaylandOutput, clayland_output, G_TYPE_OBJECT);
 
 static void

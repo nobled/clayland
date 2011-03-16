@@ -81,7 +81,8 @@ destroy_surface(struct wl_resource *resource, struct wl_client *client)
 {
 	ClaylandSurface *surface =
 		container_of(resource, ClaylandSurface, surface.resource);
-	ClutterActor *container = surface->compositor->output->container;
+	ClaylandOutput *output = surface->compositor->output;
+	ClutterActor *container = _clayland_output_get_container(output);
 	struct wl_listener *l, *next;
 	uint32_t time;
 
@@ -109,7 +110,7 @@ compositor_create_surface(struct wl_client *client,
 
 	if (clayland->output == NULL)
 		return;
-	container = clayland->output->container;
+	container = _clayland_output_get_container(clayland->output);
 
 	surface = g_object_new (clayland_surface_get_type(), NULL);
 
