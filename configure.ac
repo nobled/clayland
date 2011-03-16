@@ -1,4 +1,4 @@
-AC_INIT(clayland, 0.1)
+AC_INIT([clayland], [0.1])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AC_PROG_CC
 LT_INIT
@@ -14,7 +14,7 @@ x11_deps="clutter-x11-1.0 clutter-egl-1.0 x11-xcb xcb-dri2"
 
 clutter_backend="auto"
 AC_ARG_WITH([backend],
-	[AC_HELP_STRING([--with-backend=@<:@x11-egl,generic,auto@:>@],
+	[AS_HELP_STRING([--with-backend=@<:@x11-egl,generic,auto@:>@],
 		[Select Clutter backend - determines whether DRM buffers are possible])],
 	[clutter_backend=$with_backend])
 
