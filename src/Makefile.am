@@ -13,13 +13,15 @@ libclayland_la_SOURCES =			\
 	clayland-private.h			\
 	clayland.c				\
 	clayland-buffer.c			\
-	clayland-drm.c				\
-	clayland-shm.c				\
+	clayland-shm-buffer.c			\
 	clayland-surface.c			\
 	input.c					\
 	output.c				\
 	shell.c					\
 	wayland-source.c			\
+	clayland-drm.h				\
+	clayland-drm-compositor.c		\
+	clayland-drm-buffer.c			\
 	$(dri2_sources)
 
 if HAVE_X11

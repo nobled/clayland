@@ -40,13 +40,12 @@ clayland_compositor_finalize (GObject *object)
 		g_object_unref(compositor->output);
 	if (compositor->display != NULL)
 		wl_display_destroy (compositor->display);
-	if (compositor->drm_fd >= 0)
-		(void) close(compositor->drm_fd);
-	if (compositor->drm_path != NULL)
-		g_free(compositor->drm_path);
 
 	G_OBJECT_CLASS (clayland_compositor_parent_class)->finalize (object);
 }
+
+static void
+clayland_compositor_add_interfaces (ClaylandCompositor *compositor);
 
 static void
 clayland_compositor_class_init (ClaylandCompositorClass *klass)
@@ -54,6 +53,8 @@ clayland_compositor_class_init (ClaylandCompositorClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = clayland_compositor_finalize;
+
+	klass->add_interfaces = clayland_compositor_add_interfaces;
 }
 
 static void
@@ -61,8 +62,6 @@ clayland_compositor_init (ClaylandCompositor *compositor)
 {
 	compositor->display = NULL;
 	compositor->output = NULL;
-	compositor->drm_path = NULL;
-	compositor->drm_fd = -1;
 }
 
 
@@ -149,6 +148,16 @@ clayland_compositor_get_display(ClaylandCompositor *compositor)
 	return compositor->display;
 }
 
+static void
+_clayland_add_buffer_interfaces (ClaylandCompositor *compositor)
+{
+	ClaylandCompositorClass *klass;
+
+	klass = CLAYLAND_COMPOSITOR_GET_CLASS(compositor);
+
+	klass->add_interfaces(compositor);
+}
+
 ClaylandCompositor *
 clayland_compositor_create(struct wl_display *display)
 {
@@ -156,7 +165,7 @@ clayland_compositor_create(struct wl_display *display)
 
 	g_return_val_if_fail(display != NULL, NULL);
 
-	compositor = g_object_new (clayland_compositor_get_type(), NULL);
+	compositor = g_object_new (clayland_drm_compositor_get_type(), NULL);
 
 	g_debug("creating compositor %p of type '%s'", compositor,
 	        G_OBJECT_TYPE_NAME(compositor));
@@ -184,5 +193,19 @@ clayland_compositor_create(struct wl_display *display)
 	}
 
 	return compositor;
+}
+
+static void
+clayland_compositor_add_interfaces (ClaylandCompositor *compositor)
+{
+	struct wl_display *display = compositor->display;
+	struct wl_object *shm = &compositor->shm_object;
+
+	shm->interface = &wl_shm_interface;
+	shm->implementation = (void (**)(void)) &clayland_shm_interface;
+	wl_display_add_object(display, shm);
+
+	if (wl_display_add_global(display, shm, NULL))
+		g_warning("failed to add shm global object");
 }
 

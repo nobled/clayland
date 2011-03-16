@@ -20,7 +20,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include "clayland-private.h"
+#include "clayland-drm.h"
 
 #define CLAYLAND_TYPE_DRM_BUFFER            (clayland_drm_buffer_get_type ())
 #define CLAYLAND_DRM_BUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), CLAYLAND_TYPE_DRM_BUFFER, ClaylandDrmBuffer))
@@ -71,12 +71,12 @@ clayland_drm_buffer_init (ClaylandDrmBuffer *buffer)
 }
 
 static void
-drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
+drm_buffer_create(struct wl_client *client, struct wl_drm *_drm,
                   uint32_t id, uint32_t name, int32_t width, int32_t height,
                   uint32_t stride, struct wl_visual *visual)
 {
-	ClaylandCompositor *compositor =
-	    container_of((struct wl_object *)drm, ClaylandCompositor, drm_object);
+	ClaylandDRMCompositor *drm =
+	    container_of((struct wl_object *)_drm, ClaylandDRMCompositor, object);
 	ClaylandDrmBuffer *buffer;
 	EGLImageKHR image;
 	EGLint attribs[] = {
@@ -94,7 +94,7 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 		return;
 	}
 
-	pformat = _clayland_init_buffer(&buffer->cbuffer, compositor,
+	pformat = _clayland_init_buffer(&buffer->cbuffer, &drm->compositor,
 	                                id, width, height, visual);
 	if (pformat == COGL_PIXEL_FORMAT_ANY) {
 		/* XXX: report error? */
@@ -106,7 +106,7 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 	attribs[3] = height;
 	attribs[5] = stride / 4; /* convert from bytes to pixels */
 
-	image = compositor->create_image(compositor->egl_display,
+	image = drm->create_image(drm->egl_display,
 	                          EGL_NO_CONTEXT,
 	                          EGL_DRM_BUFFER_MESA,
 	                          (EGLClientBuffer)name, attribs);
@@ -119,8 +119,8 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 
 	glGenTextures(1, &buffer->gltex_handle);
 	glBindTexture(GL_TEXTURE_2D, buffer->gltex_handle);
-	compositor->image2tex(GL_TEXTURE_2D, image);
-	compositor->destroy_image(compositor->egl_display, image);
+	drm->image2tex(GL_TEXTURE_2D, image);
+	drm->destroy_image(drm->egl_display, image);
 
 	buffer->cbuffer.tex_handle =
 	    cogl_texture_new_from_foreign(buffer->gltex_handle, GL_TEXTURE_2D,
@@ -136,19 +136,19 @@ drm_buffer_create(struct wl_client *client, struct wl_drm *drm,
 }
 
 static void
-drm_authenticate(struct wl_client *client, struct wl_drm *drm, uint32_t magic)
+drm_authenticate(struct wl_client *client, struct wl_drm *_drm, uint32_t magic)
 {
-	ClaylandCompositor *compositor =
-	    container_of((struct wl_object *)drm, ClaylandCompositor, drm_object);
+	ClaylandDRMCompositor *drm =
+	    container_of((struct wl_object *)_drm, ClaylandDRMCompositor, object);
 
-	if (dri2_authenticate(compositor, magic) < 0) {
+	if (dri2_authenticate(drm, magic) < 0) {
 		wl_client_post_event(client,
-				(struct wl_object *)compositor->display,
+				(struct wl_object *)drm->compositor.display,
 				WL_DISPLAY_INVALID_OBJECT, 0);
 		return;
 	}
 
-	wl_client_post_event(client, &compositor->drm_object,
+	wl_client_post_event(client, &drm->object,
 	                        WL_DRM_AUTHENTICATED);
 }
 

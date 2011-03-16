@@ -23,11 +23,11 @@
 #include <X11/Xlib-xcb.h>
 #include <fcntl.h>
 
-#include "clayland-private.h"
+#include "clayland-drm.h"
 #include "clayland-config.h"
 
 int
-dri2_x11_connect(ClaylandCompositor *compositor)
+dri2_x11_connect(ClaylandDRMCompositor *drm)
 {
 	Display *dpy;
 	xcb_connection_t *conn;
@@ -104,29 +104,29 @@ dri2_x11_connect(ClaylandCompositor *compositor)
 		return -1;
 	}
 
-	compositor->drm_path = g_strdup(path);
-	if (compositor->drm_path == NULL) {
+	drm->drm_path = g_strdup(path);
+	if (drm->drm_path == NULL) {
 		(void) close(fd);
 		return -1;
 	}
 
-	compositor->drm_fd = fd;
-	compositor->xconn = conn;
-	compositor->root_xwindow = root;
+	drm->drm_fd = fd;
+	drm->xconn = conn;
+	drm->root_xwindow = root;
 
 	return 0;
 }
 
 int
-dri2_x11_authenticate(ClaylandCompositor *compositor, uint32_t magic)
+dri2_x11_authenticate(ClaylandDRMCompositor *drm, uint32_t magic)
 {
 	xcb_connection_t *conn;
 	xcb_dri2_authenticate_reply_t *authenticate;
 	xcb_dri2_authenticate_cookie_t authenticate_cookie;
 	Window root;
 
-	conn = compositor->xconn;
-	root = compositor->root_xwindow;
+	conn = drm->xconn;
+	root = drm->root_xwindow;
 
 	authenticate_cookie =
 		xcb_dri2_authenticate_unchecked(conn, root, magic);
