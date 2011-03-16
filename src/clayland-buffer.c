@@ -233,12 +233,14 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 	EGLDisplay edpy;
 	const char *extensions, *glextensions;
 	gboolean drm;
+	struct wl_display *display = compositor->display;
+	struct wl_object *shm = &compositor->shm_object;
 
-	compositor->shm_object.interface = &wl_shm_interface;
-	compositor->shm_object.implementation =
-	    (void (**)(void)) &clayland_shm_interface;
-	wl_display_add_object(compositor->display, &compositor->shm_object);
-	wl_display_add_global(compositor->display, &compositor->shm_object, NULL);
+	shm->interface = &wl_shm_interface;
+	shm->implementation = (void (**)(void)) &clayland_shm_interface;
+	wl_display_add_object(display, shm);
+	if (wl_display_add_global(display, shm, NULL))
+		g_warning("failed to add shm global object");
 
 	if (dri2_connect(compositor) < 0) {
 		g_debug("Could not connect to DRI2, disabling DRM buffers");
@@ -277,9 +279,12 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 	compositor->drm_object.interface = &wl_drm_interface;
 	compositor->drm_object.implementation =
 	    (void (**)(void)) &clayland_drm_interface;
-	wl_display_add_object(compositor->display, &compositor->drm_object);
-	wl_display_add_global(compositor->display, &compositor->drm_object,
-	                      post_drm_device);
+	wl_display_add_object(display, &compositor->drm_object);
+	if (wl_display_add_global(display, &compositor->drm_object,
+	                          post_drm_device)) {
+		g_warning("failed to add drm global object");
+		return;
+	}
 
 	compositor->egl_display = edpy;
 	g_debug("egl display %p", edpy);
