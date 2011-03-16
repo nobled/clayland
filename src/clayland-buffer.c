@@ -250,7 +250,7 @@ _clayland_add_buffer_interfaces(ClaylandCompositor *compositor)
 	edpy = EGL_NO_DISPLAY;
 #endif
 	extensions = eglQueryString(edpy, EGL_EXTENSIONS);
-	glextensions = glGetString(GL_EXTENSIONS);
+	glextensions = (const char*)glGetString(GL_EXTENSIONS);
 	drm = has_extension(extensions, 18, "EGL_MESA_drm_image");
 	drm = has_extension(extensions, 18, "EGL_KHR_image_base") && drm;
 	drm = has_extension(glextensions, 16, "GL_OES_EGL_image") && drm;
