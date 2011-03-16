@@ -1,5 +1,5 @@
 AC_INIT([clayland], [0.1])
-AM_INIT_AUTOMAKE([-Wall foreign dist-bzip2])
+AM_INIT_AUTOMAKE([1.9 -Wall foreign tar-pax dist-bzip2])
 AC_PROG_CC
 LT_INIT
 
